@@ -212,34 +212,28 @@ export class Tetronimo {
 	}
 
 	spawn_piece(){
+		this.origin = [5,3];
 		switch(this.type){
 			case P_TYPE.I:
-				this.origin = [5,3];
-				this.blocks = [[0,0],[0,1],[0,2],[0,3]];
+				this.blocks = [[0,-1],[0,0],[0,1],[0,2]];
 				break;
 			case P_TYPE.O:
-				this.origin = [4,3];
-				this.blocks = [[0,0],[0,1],[1,0],[1,1]];
+				this.blocks = [[-1,-1],[-1,0],[0,-1],[0,0]];
 				break;
 			case P_TYPE.T:
-				this.origin = [4,3];
-				this.blocks = [[0,1],[1,1],[2,1],[1,0]];
+				this.blocks = [[-1,0],[0,0],[1,0],[0,-1]];
 				break;
 			case P_TYPE.S:
-				this.origin = [3,3];
-				this.blocks = [[1,0],[1,1],[2,1],[2,2]];
+				this.blocks = [[-1,0],[0,0],[0,-1],[1,-1]];
 				break;
 			case P_TYPE.Z:
-				this.origin = [3,3];
-				this.blocks = [[1,2],[1,1],[2,1],[2,0]];
+				this.blocks = [[-1,-1],[0,-1],[0,0],[1,0]];
 				break;
 			case P_TYPE.J:
-				this.origin = [4,3];
-				this.blocks = [[0,0],[0,1],[1,1],[2,1]];
+				this.blocks = [[-1,-1],[-1,0],[0,0],[1,0]];
 				break;
 			case P_TYPE.L:
-				this.origin = [4,3];
-				this.blocks = [[2,0],[0,1],[1,1],[2,1]];
+				this.blocks = [[-1,0],[0,0],[1,0],[1,-1]];
 				break;
 		}	
 	}
@@ -306,9 +300,39 @@ export class Tetronimo {
 			}				
 		}
 	}
+	
+	// returns the rotated version of the blocks
+	get_rotated(dir){
+		console.log("ORIGINAL");
+		let rotated = [...this.blocks]; // create hard copy
+		if (dir === "LROT"){
+			for (let coord of rotated){
+				let x = coord[0];
+				let y = coord[1];
+				coord[0] = y;
+				coord[1] = -x;
+			}
+			console.log("ROTATED");
+			console.log(rotated);
+			// reverse each col
+		} else if (dir === "RROT"){
+			// transpose
+			// reverse each row
+		}
+		return rotated;
+	}
 
-	rotate(){
-
+	rotate(dir, grid){
+		// We cannot rotate O
+		if (this.type === P_TYPE.O)
+			return;
+		if (dir === "LROT" || dir === "RROT"){
+			console.log("ROTATING");
+			let rotated = this.get_rotated(dir);	
+			// check to see if rotated overlaps with any grid elements before actually rotated
+			// it should also check to see if rotated result is in the boundaries of the grid
+			this.blocks = rotated;
+		}
 	}
 }
 
@@ -375,7 +399,7 @@ export class InputHandler {
 		this.create_event_listeners();
 	}
 
-	updateKeyState(keycode, new_state){
+	update_key_state(keycode, new_state){
 		if (keycode in KC_STR_MAP){
 			let i = KC_KEYMAP[keycode];
 			if (new_state != this.keys[i]){
@@ -386,7 +410,7 @@ export class InputHandler {
 	}
 
 	create_event_listeners(){
-		document.addEventListener('keydown', (e) => this.updateKeyState(e.keyCode, 1) );
-		document.addEventListener('keyup', (e) => this.updateKeyState(e.keyCode, 0) );
+		document.addEventListener('keydown', (e) => this.update_key_state(e.keyCode, 1) );
+		document.addEventListener('keyup', (e) => this.update_key_state(e.keyCode, 0) );
 	}
 }
