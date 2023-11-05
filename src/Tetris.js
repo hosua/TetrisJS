@@ -207,7 +207,7 @@ export class Tetronimo {
 			res = Math.max(res, block[1] + this.origin[1]);
 		return res;
 	}
-	
+
 	// check if valid move by making a copy of the tetronimo's new position and checking if there is
 	// any overlap with the grid.
 	// Returns true if the new move is valid
@@ -286,7 +286,7 @@ export class Tetronimo {
 	move(dir, grid){
 		console.log(`DIR: ${dir}`);
 		console.log(this.origin);
-		
+
 		// checks collisions with other pieces and also does boundary checks before actually moving the piece
 		if (dir === "LEFT" || dir === "RIGHT" || dir === "DOWN" || dir === "UP"){
 			switch(dir){
@@ -310,40 +310,41 @@ export class Tetronimo {
 			}				
 		}
 	}
-	
-	// Returns the rotated version of the blocks.
-	get_rotated(dir){
-		// This is a separate function because we want a copy of the rotated
-		// piece before actually rotating it to check if the rotation overlaps
-		// with another piece, or falls outside the boundaries of the grid.
-		let rotated = this.blocks.map((coord) => { return coord.slice()}); // create hard copy
-		if (dir === "LROT"){
-			for (let coord of rotated){
-				let x = coord[0];
-				let y = coord[1];
-				coord[0] = y;
-				coord[1] = -x;
-			}
-			// reverse each col
-		} else if (dir === "RROT"){
-			for (let coord of rotated){
-				let x = coord[0];
-				let y = coord[1];
-				coord[0] = -y;
-				coord[1] = x;
-			}
-		}
-		return rotated;
-	}
 
 	rotate(dir, grid, keys){
 		// We cannot rotate O
 		if (this.type === P_TYPE.O)
 			return;
 
+		// Returns the rotated version of the blocks.
+		const get_rotated = (dir) => {
+			// This is a separate function because we want a copy of the rotated
+			// piece before actually rotating it to check if the rotation overlaps
+			// with another piece, or falls outside the boundaries of the grid.
+			let rotated = this.blocks.map((coord) => { return coord.slice()}); // create hard copy
+			if (dir === "LROT"){
+				for (let coord of rotated){
+					let x = coord[0];
+					let y = coord[1];
+					coord[0] = y;
+					coord[1] = -x;
+				}
+				// reverse each col
+			} else if (dir === "RROT"){
+				for (let coord of rotated){
+					let x = coord[0];
+					let y = coord[1];
+					coord[0] = -y;
+					coord[1] = x;
+				}
+			}
+			return rotated;
+
+		}
+
 		if (dir === "LROT" || dir === "RROT"){
 			let can_rotate = true;
-			let rotated = this.get_rotated(dir);	
+			let rotated = get_rotated(dir);	
 			for (let rot of rotated){
 				let rx = this.origin[0] + rot[0];
 				let ry = this.origin[1] + rot[1];
@@ -399,6 +400,39 @@ export class Tetris {
 	spawn_rand_piece(){
 		let rand_type = Math.round(Math.random() * (P_TYPE.L-1)+1);
 		return new Tetronimo(rand_type);
+	}
+	
+	// checks and clears all full lines, returns how many lines were cleared 
+	clear_lines(){
+		console.log("Checking for full lines");
+		let lines_cleared = 0;
+		// Do a downward scan to see if line is full
+		for (let y = 5; y < PLAYFIELD_YMAX; y++){
+			console.log(`y: ${y}`);
+			let is_full = true;
+
+			// scan the line
+			for (let x = 0; x < PLAYFIELD_XMAX; x++){
+				if (this.grid[y][x] === P_TYPE.NONE){
+					is_full = false;
+					break;
+				}
+			}
+			
+			if (is_full){
+				console.log(`Detected full line at ${y}`);
+				// clear the current line
+				for (let x = 0; x < PLAYFIELD_XMAX; x++){
+					this.grid[y][x] = P_TYPE.NONE;
+					lines_cleared++; // will be used for scoring when it's implemented
+				}
+				// shift all lines above from current y coordinate down 1
+				for (let yy = y; yy >= 5; yy--){
+					this.grid[yy] = this.grid[yy-1]
+				}
+			}
+		}	
+		return lines_cleared;
 	}
 }
 

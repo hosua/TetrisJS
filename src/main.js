@@ -2,6 +2,7 @@ import { GFX, Tetris, Tetronimo, P_TYPE, InputHandler, KB_MAP, KC_KEYMAP, KC_STR
 
 const POLL_TICK = 25;
 const FALL_TICK = 100;
+const CLEAR_DELAY = 200;
 
 let gfx = new GFX();
 let tetris = new Tetris();
@@ -10,12 +11,13 @@ let keys = input_handler.keys; // This creates a reference to the array (not a c
 
 let queue = [
 	new Tetronimo(P_TYPE.I),
+	new Tetronimo(P_TYPE.I),
 	// new Tetronimo(P_TYPE.T),
 	// new Tetronimo(P_TYPE.S),
 	// new Tetronimo(P_TYPE.Z),
 	// new Tetronimo(P_TYPE.J),
 	// new Tetronimo(P_TYPE.L),
-	tetris.spawn_rand_piece(),
+	// tetris.spawn_rand_piece(),
 	// tetris.spawn_rand_piece(),
 	// tetris.spawn_rand_piece(),
 	// tetris.spawn_rand_piece(),
@@ -45,7 +47,6 @@ poll_input();
 var tetronimo = queue.shift();
 while (true){
 	while (!tetris.check_gameover()){
-
 		while (tetronimo.fall(tetris.grid)){
 			// TODO: Need to somehow implement the ability to make multiple moves per fall() iteration
 			// poll the keys array and perform movements based on the inputs that are set
@@ -54,11 +55,14 @@ while (true){
 			gfx.draw_grid_elements(tetris.grid);
 			gfx.draw_gridlines();
 			gfx.draw_falling_tetronimo(tetronimo);
-			// tetronimo.get_rotated("LROT");
 			await new Promise(resolve => setTimeout(resolve, FALL_TICK));
 		}
 		tetronimo = queue.shift();
-		queue.push(tetris.spawn_rand_piece());
+		// queue.push(tetris.spawn_rand_piece());
+		queue.push(new Tetronimo(P_TYPE.I));
+		if (tetris.clear_lines()){
+			await new Promise(resolve => setTimeout(resolve, CLEAR_DELAY));
+		}
 		await new Promise(resolve => setTimeout(resolve, FALL_TICK));
 	}
 	gfx = new GFX();
