@@ -53,6 +53,17 @@ export const KC_STR_MAP = {
 	[KB_MAP.UP]: "UP",
 }
 
+export const STR_KC_MAP = {
+	"LROT":  [KB_MAP.LROT],
+	"RROT":  [KB_MAP.RROT],
+	"PAUSE": [KB_MAP.PAUSE],
+
+	"LEFT":  [KB_MAP.LEFT],
+	"DOWN":  [KB_MAP.DOWN],
+	"RIGHT": [KB_MAP.RIGHT],
+	"UP":    [KB_MAP.UP],
+}
+
 export const KC_KEYMAP = {
 	[KB_MAP.LROT]: 0,
 	[KB_MAP.RROT]: 1,
@@ -238,7 +249,7 @@ export class Tetronimo {
 		}	
 	}
 
-	// This will check the grid to see if the piece can fall down. If it can, piece down once.
+	// This will check the grid to see if the piece can fall down. If it can, it will move piece down once.
 	// returns true if still falling
 	fall(grid){
 		let can_fall = true;
@@ -275,9 +286,8 @@ export class Tetronimo {
 	move(dir, grid){
 		console.log(`DIR: ${dir}`);
 		console.log(this.origin);
-
-		// TODO: collision detection with other pieces needs to be implemented
-		// (it should check against the values stored in the grid)
+		
+		// checks collisions with other pieces and also does boundary checks before actually moving the piece
 		if (dir === "LEFT" || dir === "RIGHT" || dir === "DOWN" || dir === "UP"){
 			switch(dir){
 				case "LEFT":
@@ -301,10 +311,12 @@ export class Tetronimo {
 		}
 	}
 	
-	// returns the rotated version of the blocks
+	// Returns the rotated version of the blocks.
 	get_rotated(dir){
-		console.log("ORIGINAL");
-		let rotated = [...this.blocks]; // create hard copy
+		// This is a separate function because we want a copy of the rotated
+		// piece before actually rotating it to check if the rotation overlaps
+		// with another piece, or falls outside the boundaries of the grid.
+		let rotated = this.blocks.map((coord) => { return coord.slice()}); // create hard copy
 		if (dir === "LROT"){
 			for (let coord of rotated){
 				let x = coord[0];
@@ -312,26 +324,51 @@ export class Tetronimo {
 				coord[0] = y;
 				coord[1] = -x;
 			}
-			console.log("ROTATED");
-			console.log(rotated);
 			// reverse each col
 		} else if (dir === "RROT"){
-			// transpose
-			// reverse each row
+			for (let coord of rotated){
+				let x = coord[0];
+				let y = coord[1];
+				coord[0] = -y;
+				coord[1] = x;
+			}
 		}
 		return rotated;
 	}
 
-	rotate(dir, grid){
+	rotate(dir, grid, keys){
 		// We cannot rotate O
 		if (this.type === P_TYPE.O)
 			return;
+
 		if (dir === "LROT" || dir === "RROT"){
-			console.log("ROTATING");
+			let can_rotate = true;
 			let rotated = this.get_rotated(dir);	
-			// check to see if rotated overlaps with any grid elements before actually rotated
-			// it should also check to see if rotated result is in the boundaries of the grid
-			this.blocks = rotated;
+			for (let rot of rotated){
+				let rx = this.origin[0] + rot[0];
+				let ry = this.origin[1] + rot[1];
+				console.log(rx, ry);
+				// first, check if rotated position is within the boundaries of the grid
+				if (rx < 0 || rx >= PLAYFIELD_XMAX){
+					can_rotate = false;
+					break;
+				}
+				if (ry < 0 || ry >= PLAYFIELD_YMAX){
+					can_rotate = false;
+					break;
+				}
+				// second, check if the rotated position overlaps with any other pieces already on the grid
+				if (grid[ry][rx] !== P_TYPE.NONE){
+					can_rotate = false;
+					break;
+				}
+			}
+			if (can_rotate)
+				this.blocks = rotated;
+			// Unset the rotation key so that holding the button doesn't repeatedly
+			// rotate the piece 
+			// Also, whoever is reading this code, I'm aware of how stupid this is LMAO
+			keys[KC_KEYMAP[STR_KC_MAP[dir]]] = 0;
 		}
 	}
 }
@@ -346,31 +383,7 @@ export class Tetris {
 
 	print_grid(){ console.log(this.grid); }
 
-	// fill the grid with shit to make sure drawing is working properly
-	stupid_fill_test(){
-		for (let i = 0; i < 10; i++){
-			this.grid[24][i] = P_TYPE.I;
-		}
-		for (let i = 1; i < 10; i++){
-			this.grid[23][i] = P_TYPE.O;
-		}
-		for (let i = 2; i < 10; i++){
-			this.grid[22][i] = P_TYPE.T;
-		}
-		for (let i = 3; i < 10; i++){
-			this.grid[21][i] = P_TYPE.S;
-		}
-		for (let i = 4; i < 10; i++){
-			this.grid[20][i] = P_TYPE.Z;
-		}
-		for (let i = 5; i < 10; i++){
-			this.grid[19][i] = P_TYPE.J;
-		}
-		for (let i = 6; i < 10; i++){
-			this.grid[18][i] = P_TYPE.L;
-		}
-	}
-
+	// If any pieces land above where the game renders, it's game over
 	check_gameover(){
 		for (let y = 3; y < 5; y++){
 			for (let x = 0; x < PLAYFIELD_XMAX; x++){
