@@ -283,7 +283,7 @@ export class Tetronimo {
 		return can_fall;
 	}
 
-	move(dir, grid){
+	move(dir, grid, keys){
 		console.log(`DIR: ${dir}`);
 		console.log(this.origin);
 
@@ -309,6 +309,7 @@ export class Tetronimo {
 					break;
 			}				
 		}
+		keys[KC_KEYMAP[STR_KC_MAP[dir]]] = 0;
 	}
 
 	rotate(dir, grid, keys){

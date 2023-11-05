@@ -10,18 +10,18 @@ let input_handler = new InputHandler();
 let keys = input_handler.keys; // This creates a reference to the array (not a copy)
 
 let queue = [
-	new Tetronimo(P_TYPE.I),
-	new Tetronimo(P_TYPE.I),
+	// new Tetronimo(P_TYPE.I),
+	// new Tetronimo(P_TYPE.I),
 	// new Tetronimo(P_TYPE.T),
 	// new Tetronimo(P_TYPE.S),
 	// new Tetronimo(P_TYPE.Z),
 	// new Tetronimo(P_TYPE.J),
 	// new Tetronimo(P_TYPE.L),
-	// tetris.spawn_rand_piece(),
-	// tetris.spawn_rand_piece(),
-	// tetris.spawn_rand_piece(),
-	// tetris.spawn_rand_piece(),
-	// tetris.spawn_rand_piece(),
+	tetris.spawn_rand_piece(),
+	tetris.spawn_rand_piece(),
+	tetris.spawn_rand_piece(),
+	tetris.spawn_rand_piece(),
+	tetris.spawn_rand_piece(),
 ];
 
 async function poll_input(){
@@ -29,7 +29,7 @@ async function poll_input(){
 		for (let key in KC_KEYMAP){
 			let i = KC_KEYMAP[key];
 			if (keys[i] === 1){
-				tetronimo.move(KC_STR_MAP[key], tetris.grid);
+				tetronimo.move(KC_STR_MAP[key], tetris.grid, keys);
 				tetronimo.rotate(KC_STR_MAP[key], tetris.grid, keys);
 				gfx.draw_background();
 				gfx.draw_playfield();
@@ -58,8 +58,8 @@ while (true){
 			await new Promise(resolve => setTimeout(resolve, FALL_TICK));
 		}
 		tetronimo = queue.shift();
-		// queue.push(tetris.spawn_rand_piece());
-		queue.push(new Tetronimo(P_TYPE.I));
+		queue.push(tetris.spawn_rand_piece());
+		// queue.push(new Tetronimo(P_TYPE.I));
 		if (tetris.clear_lines()){
 			await new Promise(resolve => setTimeout(resolve, CLEAR_DELAY));
 		}
