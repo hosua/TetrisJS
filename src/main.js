@@ -1,22 +1,16 @@
-import { GFX, Tetris, Tetronimo, P_TYPE, InputHandler, KB_MAP, KC_KEYMAP, KC_STR_MAP } from "./Tetris.js"
+import { GFX, Tetris, Tetronimo, P_TYPE, T_STATE, KEY } from "./Tetris.js"
+const bg_canvas = document.getElementById("background-canvas");
+const tetris_canvas = document.getElementById("tetris-canvas");
 
-const POLL_TICK = 25;
-const FALL_TICK = 100;
-const CLEAR_DELAY = 200;
+const POLL_TICK = 30;
+const FALL_TICK = 200; // If we ever implement levels, this determines the difficulty
+const DELAY_TICK = 300; // additional wait time after a piece lands
+const CLEAR_DELAY = 200; // additional wait time before a line is cleared
 
 let gfx = new GFX();
 let tetris = new Tetris();
-let input_handler = new InputHandler();
-let keys = input_handler.keys; // This creates a reference to the array (not a copy)
 
 let queue = [
-	// new Tetronimo(P_TYPE.I),
-	// new Tetronimo(P_TYPE.I),
-	// new Tetronimo(P_TYPE.T),
-	// new Tetronimo(P_TYPE.S),
-	// new Tetronimo(P_TYPE.Z),
-	// new Tetronimo(P_TYPE.J),
-	// new Tetronimo(P_TYPE.L),
 	tetris.spawn_rand_piece(),
 	tetris.spawn_rand_piece(),
 	tetris.spawn_rand_piece(),
@@ -24,46 +18,45 @@ let queue = [
 	tetris.spawn_rand_piece(),
 ];
 
-async function poll_input(){
-	while (true){
-		for (let key in KC_KEYMAP){
-			let i = KC_KEYMAP[key];
-			if (keys[i] === 1){
-				tetronimo.move(KC_STR_MAP[key], tetris.grid, keys);
-				tetronimo.rotate(KC_STR_MAP[key], tetris.grid, keys);
-				gfx.draw_background();
-				gfx.draw_playfield();
-				gfx.draw_grid_elements(tetris.grid);
-				gfx.draw_gridlines();
-				gfx.draw_falling_tetronimo(tetronimo);
-			}
-		}
-		await new Promise(resolve => setTimeout(resolve, POLL_TICK));
-	}
+function onkey(e){
+	let keycode = e.keyCode;
+	console.log(`Pressing ${keycode}`);
+	switch (keycode){
+		case KEY.LEFT:
+		case KEY.RIGHT:
+		case KEY.DOWN:
+			tetronimo.move(keycode, tetris.grid);
+			break;
+		case KEY.X:
+		case KEY.Z:
+			tetronimo.rotate(keycode, tetris.grid);
+			break;
+		case KEY.SPACE:
+			tetronimo.hard_drop(tetris.grid);
+			break;
+	}	
+	gfx.draw_all(tetris.grid, tetronimo);
 }
 
-poll_input();
+document.addEventListener('keydown', (e) => { return onkey(e); });
 
 var tetronimo = queue.shift();
+
 while (true){
 	while (!tetris.check_gameover()){
 		while (tetronimo.fall(tetris.grid)){
-			// TODO: Need to somehow implement the ability to make multiple moves per fall() iteration
-			// poll the keys array and perform movements based on the inputs that are set
-			gfx.draw_background();
-			gfx.draw_playfield();
-			gfx.draw_grid_elements(tetris.grid);
-			gfx.draw_gridlines();
-			gfx.draw_falling_tetronimo(tetronimo);
+			gfx.draw_all(tetris.grid, tetronimo);
 			await new Promise(resolve => setTimeout(resolve, FALL_TICK));
 		}
 		tetronimo = queue.shift();
 		queue.push(tetris.spawn_rand_piece());
-		// queue.push(new Tetronimo(P_TYPE.I));
+
 		if (tetris.clear_lines()){
 			await new Promise(resolve => setTimeout(resolve, CLEAR_DELAY));
+			gfx.draw_all(tetris.grid, tetronimo);
 		}
-		await new Promise(resolve => setTimeout(resolve, FALL_TICK));
+
+		await new Promise(resolve => setTimeout(resolve, DELAY_TICK));
 	}
 	gfx = new GFX();
 	tetris = new Tetris();

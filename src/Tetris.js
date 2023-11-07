@@ -8,6 +8,17 @@ const PLAYFIELD_YMAX = 25;
 const PLAYFIELD_XMAX = 10;
 const Y_OFF = 5;
 
+export const KEY = {
+	SPACE: 32,
+	LEFT: 37,
+	UP: 38,
+	RIGHT: 39,
+	DOWN: 40,
+	P: 80,
+	X: 88,
+	Z: 90,
+};
+
 export const P_TYPE = {
 	NONE: 0,
 	I: 1,
@@ -27,52 +38,6 @@ const P_COLORS = {
 	[P_TYPE.Z]: "#4f0099",
 	[P_TYPE.J]: "#c70021",
 	[P_TYPE.L]: "#0e3d9c",
-}
-
-// kb mappings -> keycode
-export const KB_MAP = {
-	LROT: 90, // Z
-	RROT: 88, // X
-	PAUSE: 80, // P
-
-	LEFT: 37, // Arrows
-	DOWN: 40,
-	RIGHT: 39,
-	UP: 38,
-}
-
-// keycode -> key string
-export const KC_STR_MAP = {
-	[KB_MAP.LROT]: "LROT",
-	[KB_MAP.RROT]: "RROT",
-	[KB_MAP.PAUSE]: "PAUSE",
-
-	[KB_MAP.LEFT]: "LEFT",
-	[KB_MAP.DOWN]: "DOWN",
-	[KB_MAP.RIGHT]: "RIGHT",
-	[KB_MAP.UP]: "UP",
-}
-
-export const STR_KC_MAP = {
-	"LROT":  [KB_MAP.LROT],
-	"RROT":  [KB_MAP.RROT],
-	"PAUSE": [KB_MAP.PAUSE],
-
-	"LEFT":  [KB_MAP.LEFT],
-	"DOWN":  [KB_MAP.DOWN],
-	"RIGHT": [KB_MAP.RIGHT],
-	"UP":    [KB_MAP.UP],
-}
-
-export const KC_KEYMAP = {
-	[KB_MAP.LROT]: 0,
-	[KB_MAP.RROT]: 1,
-	[KB_MAP.PAUSE]: 2,
-
-	[KB_MAP.LEFT]: 3,
-	[KB_MAP.DOWN]: 4,
-	[KB_MAP.RIGHT]: 5,
-	[KB_MAP.UP]: 6,
 }
 
 export class GFX {
@@ -163,6 +128,21 @@ export class GFX {
 			ctx.stroke();
 		}
 	}
+
+	draw_all(grid, tetronimo){
+		this.draw_background();
+		this.draw_playfield();
+		this.draw_grid_elements(grid);
+		this.draw_gridlines();
+		this.draw_falling_tetronimo(tetronimo);
+	}
+}
+
+// Tetronimo states
+export const T_STATE = {
+	INITIAL: 0, // wait for first 
+	DELAY: 1, // delay for a bit, don't repeat yet
+	FAST: 2, // fast repeat until player stop pressing keys
 }
 
 export class Tetronimo {
@@ -170,6 +150,7 @@ export class Tetronimo {
 		this.type = piece_type;
 		this.origin = [0,0];
 		this.blocks = Array(4).fill([0,0]); // block positions relative to origin
+		this.state = T_STATE.INITIAL;
 		this.spawn_piece();
 	}
 
@@ -283,55 +264,54 @@ export class Tetronimo {
 		return can_fall;
 	}
 
-	move(dir, grid, keys){
-		console.log(`DIR: ${dir}`);
+	move(key, grid){
+		console.log(`KEY: ${key}`);
 		console.log(this.origin);
 
-		// checks collisions with other pieces and also does boundary checks before actually moving the piece
-		if (dir === "LEFT" || dir === "RIGHT" || dir === "DOWN" || dir === "UP"){
-			switch(dir){
-				case "LEFT":
-					console.log(`min_x: ${this.min_x()}`);
-					if (this.min_x() > 0 && this.check_move(grid, -1, 0))
-						this.origin[0]--;
-					break;
-				case "DOWN":
-					if (this.max_y() < PLAYFIELD_YMAX-1 && this.check_move(grid, 0, +1))
-						this.origin[1]++;
-					break;
-				case "RIGHT":
-					if (this.max_x() < PLAYFIELD_XMAX-1 && this.check_move(grid, +1, 0))
-						this.origin[0]++;
-					break;
-				case "UP": // This should be removed when were no longer testing
-					if (this.max_y() > 0 && this.check_move(grid, 0, -1))
-						this.origin[1]--;
-					break;
-			}				
-		}
-		keys[KC_KEYMAP[STR_KC_MAP[dir]]] = 0;
+		switch(key){
+			case KEY.LEFT:
+				console.log(`min_x: ${this.min_x()}`);
+				if (this.min_x() > 0 && this.check_move(grid, -1, 0))
+					this.origin[0]--;
+				break;
+			case KEY.DOWN:
+				if (this.max_y() < PLAYFIELD_YMAX-1 && this.check_move(grid, 0, +1))
+					this.origin[1]++;
+				break;
+			case KEY.RIGHT:
+				if (this.max_x() < PLAYFIELD_XMAX-1 && this.check_move(grid, +1, 0))
+					this.origin[0]++;
+				break;
+			case KEY.UP: // This should be removed when were no longer testing
+				if (this.max_y() > 0 && this.check_move(grid, 0, -1))
+					this.origin[1]--;
+				break;
+			default:
+				console.log("Error: Move has wrong key: ", key);
+				break;
+		}				
 	}
 
-	rotate(dir, grid, keys){
+	rotate(key, grid){
 		// We cannot rotate O
 		if (this.type === P_TYPE.O)
 			return;
 
+		console.log(`Rot: ${key}`);
 		// Returns the rotated version of the blocks.
-		const get_rotated = (dir) => {
+		const get_rotated = (key) => {
 			// This is a separate function because we want a copy of the rotated
 			// piece before actually rotating it to check if the rotation overlaps
 			// with another piece, or falls outside the boundaries of the grid.
 			let rotated = this.blocks.map((coord) => { return coord.slice()}); // create hard copy
-			if (dir === "LROT"){
+			if (key === KEY.Z){
 				for (let coord of rotated){
 					let x = coord[0];
 					let y = coord[1];
 					coord[0] = y;
 					coord[1] = -x;
 				}
-				// reverse each col
-			} else if (dir === "RROT"){
+			} else if (key === KEY.X){
 				for (let coord of rotated){
 					let x = coord[0];
 					let y = coord[1];
@@ -340,37 +320,33 @@ export class Tetronimo {
 				}
 			}
 			return rotated;
-
 		}
 
-		if (dir === "LROT" || dir === "RROT"){
-			let can_rotate = true;
-			let rotated = get_rotated(dir);	
-			for (let rot of rotated){
-				let rx = this.origin[0] + rot[0];
-				let ry = this.origin[1] + rot[1];
-				console.log(rx, ry);
-				// first, check if rotated position is within the boundaries of the grid
-				if (rx < 0 || rx >= PLAYFIELD_XMAX){
-					can_rotate = false;
-					break;
-				}
-				if (ry < 0 || ry >= PLAYFIELD_YMAX){
-					can_rotate = false;
-					break;
-				}
-				// second, check if the rotated position overlaps with any other pieces already on the grid
-				if (grid[ry][rx] !== P_TYPE.NONE){
-					can_rotate = false;
-					break;
-				}
+		let can_rotate = true;
+		let rotated = get_rotated(key);	
+		for (let rot of rotated){
+			let rx = this.origin[0] + rot[0];
+			let ry = this.origin[1] + rot[1];
+			console.log(rx, ry);
+			// first, check if rotated position is within the boundaries of the grid
+			if (rx < 0 || rx >= PLAYFIELD_XMAX || ry < 0 || ry >= PLAYFIELD_YMAX){
+				can_rotate = false;
+				break;
 			}
-			if (can_rotate)
-				this.blocks = rotated;
-			// Unset the rotation key so that holding the button doesn't repeatedly
-			// rotate the piece 
-			// Also, whoever is reading this code, I'm aware of how stupid this is LMAO
-			keys[KC_KEYMAP[STR_KC_MAP[dir]]] = 0;
+			// second, check if the rotated position overlaps with any
+			// other pieces already on the grid
+			if (grid[ry][rx] !== P_TYPE.NONE){
+				can_rotate = false;
+				break;
+			}
+		}
+		if (can_rotate)
+			this.blocks = rotated;
+	}
+
+	hard_drop(grid){
+		while(this.fall(grid)){
+			this.move(KEY.DOWN, grid);
 		}
 	}
 }
@@ -402,7 +378,7 @@ export class Tetris {
 		let rand_type = Math.round(Math.random() * (P_TYPE.L-1)+1);
 		return new Tetronimo(rand_type);
 	}
-	
+
 	// checks and clears all full lines, returns how many lines were cleared 
 	clear_lines(){
 		console.log("Checking for full lines");
@@ -419,46 +395,20 @@ export class Tetris {
 					break;
 				}
 			}
-			
+
 			if (is_full){
 				console.log(`Detected full line at ${y}`);
 				// clear the current line
 				for (let x = 0; x < PLAYFIELD_XMAX; x++){
 					this.grid[y][x] = P_TYPE.NONE;
-					lines_cleared++; // will be used for scoring when it's implemented
 				}
 				// shift all lines above from current y coordinate down 1
 				for (let yy = y; yy >= 5; yy--){
 					this.grid[yy] = this.grid[yy-1]
 				}
+				lines_cleared++; // will be used for scoring when it's implemented
 			}
 		}	
 		return lines_cleared;
-	}
-}
-
-// Creates the input event listeners
-export class InputHandler {
-	constructor(){
-		this.keys = [
-			0,0,0, // Z,X,P     
-			0,0,0,0 // (arrows): L,D,R,U
-		];
-		this.create_event_listeners();
-	}
-
-	update_key_state(keycode, new_state){
-		if (keycode in KC_STR_MAP){
-			let i = KC_KEYMAP[keycode];
-			if (new_state != this.keys[i]){
-				console.log(`${KC_STR_MAP[keycode]} = ${keycode}:${new_state}`);
-				this.keys[i] = new_state;
-			}
-		}
-	}
-
-	create_event_listeners(){
-		document.addEventListener('keydown', (e) => this.update_key_state(e.keyCode, 1) );
-		document.addEventListener('keyup', (e) => this.update_key_state(e.keyCode, 0) );
 	}
 }
