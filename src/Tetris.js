@@ -40,120 +40,6 @@ const P_COLORS = {
 	[P_TYPE.L]: "#0e3d9c",
 }
 
-export class GFX {
-	constructor() {
-		bg_canvas.style.position = "absolute";
-		tetris_canvas.style.position = "absolute";
-		bg_canvas.style.top = "50";
-		bg_canvas.style.left = "50";
-		tetris_canvas.style.top = "50";
-		tetris_canvas.style.left = "50";
-		this.draw_background();
-		this.ui_offset = tetris_canvas.width;
-		this.ui_width = bg_canvas.width - tetris_canvas.width;
-	}
-
-	draw_background(){
-		const ctx = bg_canvas.getContext("2d");
-		ctx.fillStyle = BG_COLOR;
-		ctx.fillRect(0, 0, bg_canvas.width, bg_canvas.height);
-	}
-
-	draw_playfield(){
-		const ctx = tetris_canvas.getContext("2d");
-		ctx.fillStyle = FIELD_COLOR;
-		ctx.fillRect(0, 0, tetris_canvas.width, tetris_canvas.height);
-	}
-
-	draw_gridlines(){
-		const ctx = tetris_canvas.getContext("2d");
-		const horiz_inc = tetris_canvas.height / 20;
-		const vert_inc = tetris_canvas.width / 10;
-
-		// Draw horizontal lines
-		for (let y = 0; y < tetris_canvas.height; y += horiz_inc){
-			ctx.beginPath();
-			ctx.moveTo(0, y);
-			ctx.lineTo(tetris_canvas.width, y);
-			ctx.stroke();
-		}
-
-		// Draw vertical lines
-		for (let x = 0; x < tetris_canvas.width; x += vert_inc){
-			ctx.beginPath();
-			ctx.moveTo(x, 0);
-			ctx.lineTo(x, tetris_canvas.height);
-			ctx.stroke();
-		}
-	}
-
-	// Draw the actual pieces and shit on the 2d grid (except the piece currently in motion)
-	draw_grid_elements(grid){
-		const ctx = tetris_canvas.getContext("2d");
-		const horiz_inc = tetris_canvas.height / 20;
-		const vert_inc = tetris_canvas.width / 10;
-
-		for (let y = PLAYFIELD_YMAX-1; y >= PLAYFIELD_YMAX-20; y--){
-			for (let x = 0; x < PLAYFIELD_XMAX; x++){
-				// dx, dy are drawing coords
-				let dx = x * horiz_inc;
-				let dy = (y-Y_OFF) * vert_inc;
-				if (grid[y][x] != P_TYPE.NONE){
-					ctx.fillStyle = P_COLORS[grid[y][x]];
-					ctx.beginPath();
-					ctx.rect(dx, dy, horiz_inc, vert_inc);
-					ctx.fill();
-					ctx.stroke();
-				}
-			}
-		}
-	}
-
-	// this will draw the tetronimo in motion
-	// We are avoiding putting the tetronimo on the actual grid until it lands, this way we don't
-	// have to handle creating and destroying the blocks every time it shifts down once.
-	draw_falling_tetronimo(tetronimo){
-		const ctx = tetris_canvas.getContext("2d");
-		const horiz_inc = tetris_canvas.height / 20;
-		const vert_inc = tetris_canvas.width / 10;
-
-		let origin = tetronimo.origin;
-		let blocks = tetronimo.blocks;
-		let p_type = tetronimo.type;
-
-		ctx.fillStyle = P_COLORS[p_type];
-		for (let block of blocks){
-			let dx = (origin[0] + block[0]) * horiz_inc;
-			let dy = (origin[1] + block[1] - Y_OFF) * vert_inc;
-			ctx.beginPath();
-			ctx.rect(dx, dy, horiz_inc, vert_inc);
-			ctx.fill();
-			ctx.stroke();
-		}
-	}
-
-	draw_all_game_elements(grid, tetronimo){
-		this.draw_background();
-		this.draw_playfield();
-		this.draw_grid_elements(grid);
-		this.draw_gridlines();
-		this.draw_falling_tetronimo(tetronimo);
-
-		this.draw_title();
-	}
-	
-	// UI drawing methods below
-	draw_title(){
-		console.log("drawing title\n");
-		const ctx = bg_canvas.getContext("2d");
-		ctx.font = "30px Arial";
-		ctx.textAlign = "center";
-		ctx.fillStyle = "white";
-		console.log(`offset: ${this.ui_offset + 25} width: ${this.ui_width}`);
-		ctx.fillText("TetrisJS", this.ui_offset + (this.ui_width/2), 30);
-	}
-}
-
 export class Tetronimo {
 	constructor(piece_type){
 		this.type = piece_type;
@@ -204,7 +90,6 @@ export class Tetronimo {
 		for (let block of this.blocks){
 			let nx = this.origin[0] + dx + block[0];
 			let ny = this.origin[1] + dy + block[1];
-			console.log(nx, ny);
 			if (grid[ny][nx] !== P_TYPE.NONE)
 				return false;
 		}
@@ -273,12 +158,9 @@ export class Tetronimo {
 	}
 
 	move(key, grid){
-		console.log(`KEY: ${key}`);
-		console.log(this.origin);
 
 		switch(key){
 			case KEY.LEFT:
-				console.log(`min_x: ${this.min_x()}`);
 				if (this.min_x() > 0 && this.check_move(grid, -1, 0))
 					this.origin[0]--;
 				break;
@@ -305,7 +187,6 @@ export class Tetronimo {
 		if (this.type === P_TYPE.O)
 			return;
 
-		console.log(`Rot: ${key}`);
 		// Returns the rotated version of the blocks.
 		const get_rotated = (key) => {
 			// This is a separate function because we want a copy of the rotated
@@ -335,7 +216,6 @@ export class Tetronimo {
 		for (let rot of rotated){
 			let rx = this.origin[0] + rot[0];
 			let ry = this.origin[1] + rot[1];
-			console.log(rx, ry);
 			// first, check if rotated position is within the boundaries of the grid
 			if (rx < 0 || rx >= PLAYFIELD_XMAX || ry < 0 || ry >= PLAYFIELD_YMAX){
 				can_rotate = false;
@@ -418,5 +298,181 @@ export class Tetris {
 			}
 		}	
 		return lines_cleared;
+	}
+}
+
+// Tetronimo objects for drawing UI
+const TET_UI = [
+	new Tetronimo(P_TYPE.I),
+	new Tetronimo(P_TYPE.O),
+	new Tetronimo(P_TYPE.T),
+	new Tetronimo(P_TYPE.J),
+	new Tetronimo(P_TYPE.L),
+	new Tetronimo(P_TYPE.S),
+	new Tetronimo(P_TYPE.Z),
+]
+
+export class GFX {
+	constructor() {
+		bg_canvas.style.position = "absolute";
+		tetris_canvas.style.position = "absolute";
+		bg_canvas.style.top = "50";
+		bg_canvas.style.left = "50";
+		tetris_canvas.style.top = "50";
+		tetris_canvas.style.left = "50";
+		this.ui_offset = tetris_canvas.width;
+		this.ui_width = bg_canvas.width - tetris_canvas.width;
+	}
+
+
+	draw_playfield(){
+		const ctx = tetris_canvas.getContext("2d");
+		ctx.fillStyle = FIELD_COLOR;
+		ctx.fillRect(0, 0, tetris_canvas.width, tetris_canvas.height);
+	}
+
+	draw_gridlines(){
+		const ctx = tetris_canvas.getContext("2d");
+		const horiz_inc = tetris_canvas.height / 20;
+		const vert_inc = tetris_canvas.width / 10;
+
+		// Draw horizontal lines
+		for (let y = 0; y < tetris_canvas.height; y += horiz_inc){
+			ctx.beginPath();
+			ctx.moveTo(0, y);
+			ctx.lineTo(tetris_canvas.width, y);
+			ctx.stroke();
+		}
+
+		// Draw vertical lines
+		for (let x = 0; x < tetris_canvas.width; x += vert_inc){
+			ctx.beginPath();
+			ctx.moveTo(x, 0);
+			ctx.lineTo(x, tetris_canvas.height);
+			ctx.stroke();
+		}
+	}
+
+	// Draw the actual pieces and shit on the 2d grid (except the piece currently in motion)
+	draw_grid_elements(grid){
+		const ctx = tetris_canvas.getContext("2d");
+		const horiz_inc = tetris_canvas.height / 20;
+		const vert_inc = tetris_canvas.width / 10;
+
+		for (let y = PLAYFIELD_YMAX-1; y >= PLAYFIELD_YMAX-20; y--){
+			for (let x = 0; x < PLAYFIELD_XMAX; x++){
+				// dx, dy are drawing coords
+				let dx = x * horiz_inc;
+				let dy = (y-Y_OFF) * vert_inc;
+				if (grid[y][x] != P_TYPE.NONE){
+					ctx.fillStyle = P_COLORS[grid[y][x]];
+					ctx.beginPath();
+					ctx.rect(dx, dy, horiz_inc, vert_inc);
+					ctx.fill();
+					ctx.stroke();
+				}
+			}
+		}
+	}
+
+	// this will draw the tetronimo in motion
+	// We are avoiding putting the tetronimo on the actual grid until it lands, this way we don't
+	// have to handle creating and destroying the blocks every time it shifts down once.
+	draw_falling_tetronimo(tetronimo){
+		const ctx = tetris_canvas.getContext("2d");
+		const horiz_inc = tetris_canvas.height / 20;
+		const vert_inc = tetris_canvas.width / 10;
+
+		let origin = tetronimo.origin;
+		let blocks = tetronimo.blocks;
+		let p_type = tetronimo.type;
+
+		ctx.fillStyle = P_COLORS[p_type];
+		for (let block of blocks){
+			let dx = (origin[0] + block[0]) * horiz_inc;
+			let dy = (origin[1] + block[1] - Y_OFF) * vert_inc;
+			ctx.beginPath();
+			ctx.rect(dx, dy, horiz_inc, vert_inc);
+			ctx.fill();
+			ctx.stroke();
+		}
+	}
+
+	draw_all_game_elements(grid, tetronimo){
+		// this.draw_background();
+		this.draw_playfield();
+		this.draw_grid_elements(grid);
+		this.draw_gridlines();
+		this.draw_falling_tetronimo(tetronimo);
+	}
+
+	/* UI drawing methods below */
+
+	draw_all_ui_elements(piece_counter){
+		this.draw_ui_background();
+		this.draw_ui_text("TetrisJS", 30, this.ui_offset + (this.ui_width/2), 30);
+		this.draw_ui_stats(piece_counter);
+	}
+
+	draw_ui_background(){
+		const ctx = bg_canvas.getContext("2d");
+		ctx.fillStyle = BG_COLOR;
+		ctx.fillRect(0, 0, bg_canvas.width, bg_canvas.height);
+	}
+
+	draw_ui_mini_piece(tetronimo, x, y){
+		const ctx = bg_canvas.getContext("2d");
+		const dim = 15;
+		const x_off = -100;
+		const y_off = -625;
+
+		let origin = tetronimo.origin;
+		let blocks = tetronimo.blocks;
+		let p_type = tetronimo.type;
+
+		ctx.fillStyle = P_COLORS[p_type];
+
+		for (let block of blocks){
+			let dx = x + x_off + (origin[0] + block[0]) * dim;
+			let dy = y + y_off + (origin[1] + block[1]) * dim;
+			ctx.beginPath();
+			ctx.rect(dx, dy, dim, dim);
+			ctx.fill();
+			ctx.stroke();
+		}
+	}
+
+	draw_ui_text(text, size, x, y){
+		const ctx = bg_canvas.getContext("2d");
+		ctx.font = size.toString() + "px Arial";
+		ctx.textAlign = "center";
+		ctx.fillStyle = "white";
+		ctx.fillText(text, x, y);
+	}
+
+	draw_ui_stats(piece_counter){
+		let x = 50;
+		let x_gap = 25;
+		let yi = 355;
+		let yi_inc = 50;
+		let i_piece = TET_UI[0];
+
+		this.draw_ui_text("Statistics", 20, this.ui_offset + x, 70);
+		this.draw_ui_mini_piece(i_piece, this.ui_offset + x, this.ui_offset + 280);
+		this.draw_ui_text(piece_counter[P_TYPE.I].toString(), 20, this.ui_offset + x + x_gap, 128);
+		
+		let dy = 185;
+		let dy_inc = 50;
+		for (let i = 1; i < TET_UI.length; i++){
+			let piece = TET_UI[i];
+			this.draw_ui_mini_piece(piece, this.ui_offset + x, this.ui_offset + yi);	
+			this.draw_ui_text(piece_counter[piece.type], 20, this.ui_offset + x + x_gap, dy);
+			yi += yi_inc;
+			dy += dy_inc;
+		}
+	}
+
+	draw_ui_queue(count=3){ // Draw 'count' next pieces
+
 	}
 }
