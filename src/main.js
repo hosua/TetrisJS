@@ -1,4 +1,4 @@
-import { GFX, Tetris, Tetronimo, P_TYPE, T_STATE, KEY } from "./Tetris.js"
+import { GFX, Tetris, Tetronimo, P_TYPE, KEY } from "./Tetris.js"
 const bg_canvas = document.getElementById("background-canvas");
 const tetris_canvas = document.getElementById("tetris-canvas");
 
@@ -35,7 +35,7 @@ function onkey(e){
 			tetronimo.hard_drop(tetris.grid);
 			break;
 	}	
-	gfx.draw_all(tetris.grid, tetronimo);
+	gfx.draw_all_game_elements(tetris.grid, tetronimo);
 }
 
 document.addEventListener('keydown', (e) => { return onkey(e); });
@@ -45,7 +45,7 @@ var tetronimo = queue.shift();
 while (true){
 	while (!tetris.check_gameover()){
 		while (tetronimo.fall(tetris.grid)){
-			gfx.draw_all(tetris.grid, tetronimo);
+			gfx.draw_all_game_elements(tetris.grid, tetronimo);
 			await new Promise(resolve => setTimeout(resolve, FALL_TICK));
 		}
 		tetronimo = queue.shift();
@@ -53,7 +53,7 @@ while (true){
 
 		if (tetris.clear_lines()){
 			await new Promise(resolve => setTimeout(resolve, CLEAR_DELAY));
-			gfx.draw_all(tetris.grid, tetronimo);
+			gfx.draw_all_game_elements(tetris.grid, tetronimo);
 		}
 
 		await new Promise(resolve => setTimeout(resolve, DELAY_TICK));

@@ -48,6 +48,9 @@ export class GFX {
 		bg_canvas.style.left = "50";
 		tetris_canvas.style.top = "50";
 		tetris_canvas.style.left = "50";
+		this.draw_background();
+		this.ui_offset = tetris_canvas.width;
+		this.ui_width = bg_canvas.width - tetris_canvas.width;
 	}
 
 	draw_background(){
@@ -129,20 +132,26 @@ export class GFX {
 		}
 	}
 
-	draw_all(grid, tetronimo){
+	draw_all_game_elements(grid, tetronimo){
 		this.draw_background();
 		this.draw_playfield();
 		this.draw_grid_elements(grid);
 		this.draw_gridlines();
 		this.draw_falling_tetronimo(tetronimo);
-	}
-}
 
-// Tetronimo states
-export const T_STATE = {
-	INITIAL: 0, // wait for first 
-	DELAY: 1, // delay for a bit, don't repeat yet
-	FAST: 2, // fast repeat until player stop pressing keys
+		this.draw_title();
+	}
+	
+	// UI drawing methods below
+	draw_title(){
+		console.log("drawing title\n");
+		const ctx = bg_canvas.getContext("2d");
+		ctx.font = "30px Arial";
+		ctx.textAlign = "center";
+		ctx.fillStyle = "white";
+		console.log(`offset: ${this.ui_offset + 25} width: ${this.ui_width}`);
+		ctx.fillText("TetrisJS", this.ui_offset + (this.ui_width/2), 30);
+	}
 }
 
 export class Tetronimo {
@@ -150,7 +159,6 @@ export class Tetronimo {
 		this.type = piece_type;
 		this.origin = [0,0];
 		this.blocks = Array(4).fill([0,0]); // block positions relative to origin
-		this.state = T_STATE.INITIAL;
 		this.spawn_piece();
 	}
 
