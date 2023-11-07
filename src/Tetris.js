@@ -245,6 +245,10 @@ export class Tetris {
 		this.grid = Array(PLAYFIELD_YMAX).fill().map(
 			() => Array(PLAYFIELD_XMAX).fill(P_TYPE.NONE)
 		);
+		this.score = 0;
+		this.level = 0;
+		this.total_lines_cleared = 0;
+		this.fall_tick = 0; // ms per grid
 	}
 
 	print_grid(){ console.log(this.grid); }
@@ -298,6 +302,44 @@ export class Tetris {
 			}
 		}	
 		return lines_cleared;
+	}
+
+	score_keeper(lines_cleared){
+		// n = level
+		// 1 line 		2 line 			3 line 			4 line
+		// 40 * (n + 1)	100 * (n + 1)	300 * (n + 1)	1200 * (n + 1)
+		switch(lines_cleared){
+			case 1:
+				this.score += 40 * (this.level + 1);
+				break;
+			case 2:
+				this.score += 100 * (this.level + 1);
+				break;
+			case 3:
+				this.score += 300 * (this.level + 1);
+				break;
+			case 4:
+				this.score += 1200 * (this.level + 1);
+				break;
+		}	
+	}
+	
+	// only call when level up happens
+	set_new_level(){
+		if (this.level < 9)
+			this.fall_tick = (48 - (5 * (this.level+1))) * 61;	
+		else if (this.level == 9)
+			this.fall_tick = 6 * 61;
+		else if (this.level < 13)
+			this.fall_tick = 5 * 61;
+		else if (this.level < 16)
+			this.fall_tick = 4 * 61;
+		else if (this.level < 16)
+			this.fall_tick = 3 * 61;
+		else if (this.level < 19)
+			this.fall_tick = 2 * 61;
+		else
+			this.fall_tick = 1 * 61;
 	}
 }
 
@@ -408,11 +450,12 @@ export class GFX {
 
 	/* UI drawing methods below */
 
-	draw_all_ui_elements(piece_counter, queue){
+	draw_ui_all(piece_counter, queue, score){
 		this.draw_ui_background();
 		this.draw_ui_text("TetrisJS", 30, this.ui_offset + (this.ui_width/2), 30);
 		this.draw_ui_stats(piece_counter);
 		this.draw_ui_queue(queue);
+		this.draw_ui_score(score);
 	}
 
 	draw_ui_background(){
@@ -451,40 +494,46 @@ export class GFX {
 		ctx.fillText(text, x, y);
 	}
 
-	draw_ui_stats(piece_counter){
-		let x = this.ui_offset + 50;
-		let x_gap = 25;
-		let yi = this.ui_offset + 355;
-		let yi_inc = 50;
-		let i_piece = TET_UI[0];
-
-		this.draw_ui_text("Statistics", 20, x, 70);
-		this.draw_ui_mini_piece(i_piece, x, this.ui_offset + 280);
-		this.draw_ui_text(piece_counter[P_TYPE.I].toString(), 20, x + x_gap, 128);
-		
-		let dy = 185;
-		let dy_inc = 50;
-		for (let i = 1; i < TET_UI.length; i++){
-			let piece = TET_UI[i];
-			this.draw_ui_mini_piece(piece, x, yi);	
-			this.draw_ui_text(piece_counter[piece.type], 20, x + x_gap, dy);
-			yi += yi_inc;
-			dy += dy_inc;
-		}
-	}
-
 	draw_ui_queue(queue, count=5){ // Draw 'count' next pieces
-		let x = this.ui_offset + 220;
+		let x = this.ui_offset + 60;
 		let y = this.ui_offset + 300;
 		let y_inc = 50;
 
 		this.draw_ui_text("Next Piece", 20, x, 70);
 		for (let i = 0; i < count; i++){
 			let piece = queue[i];
-			this.draw_ui_mini_piece(piece, x, y);
+			this.draw_ui_mini_piece(piece, x + 15, y);
 			if (piece.type == P_TYPE.I)
 				y += 25;
 			y += y_inc;
 		}
+	}
+
+	draw_ui_stats(piece_counter){
+		let x = this.ui_offset + 220;
+		let x_gap = 25;
+		let y = this.ui_offset + 355;
+		let y_inc = 50;
+		let i_piece = TET_UI[0];
+
+		this.draw_ui_text("Statistics", 20, x, 70);
+		this.draw_ui_mini_piece(i_piece, x, this.ui_offset + 280);
+		this.draw_ui_text(piece_counter[P_TYPE.I].toString(), 20, x + x_gap, 128);
+
+		let dy = 185;
+		let dy_inc = 50;
+		for (let i = 1; i < TET_UI.length; i++){
+			let piece = TET_UI[i];
+			this.draw_ui_mini_piece(piece, x, y);	
+			this.draw_ui_text(piece_counter[piece.type], 20, x + x_gap, dy);
+			y += y_inc;
+			dy += dy_inc;
+		}
+	}
+
+	draw_ui_score(score){
+		let x = this.ui_offset + 120;
+		let y = 500; 
+		this.draw_ui_text(`Score: ${score.toString().padStart(10, '0')}`, 25, x, y);
 	}
 }

@@ -10,9 +10,7 @@ const CLEAR_DELAY = 200; // additional wait time before a line is cleared
 let gfx = new GFX();
 let tetris = new Tetris();
 
-let piece_counter = {
-	[P_TYPE.I]:0, [P_TYPE.O]:0, [P_TYPE.T]:0, [P_TYPE.J]:0, [P_TYPE.L]:0, [P_TYPE.S]:0, [P_TYPE.Z]:0,
-}
+let piece_counter = { [P_TYPE.I]:0, [P_TYPE.O]:0, [P_TYPE.T]:0, [P_TYPE.J]:0, [P_TYPE.L]:0, [P_TYPE.S]:0, [P_TYPE.Z]:0 }
 
 function reset_piece_counter(piece_counter){
 	for (let i in piece_counter){
@@ -59,7 +57,7 @@ piece_counter[tetronimo.type]++;
 
 while (true){
 	while (!tetris.check_gameover()){
-		gfx.draw_all_ui_elements(piece_counter, queue);
+		gfx.draw_ui_all(piece_counter, queue, tetris.score);
 		while (tetronimo.fall(tetris.grid)){
 			gfx.draw_all_game_elements(tetris.grid, tetronimo);
 			await new Promise(resolve => setTimeout(resolve, FALL_TICK));
@@ -67,10 +65,12 @@ while (true){
 		tetronimo = queue.shift();
 		queue.push(tetris.spawn_rand_piece());
 		piece_counter[tetronimo.type]++;
-
-		if (tetris.clear_lines()){
+		
+		let lines_cleared = tetris.clear_lines();
+		if (lines_cleared > 0 ){
 			await new Promise(resolve => setTimeout(resolve, CLEAR_DELAY));
 			gfx.draw_all_game_elements(tetris.grid, tetronimo);
+			tetris.score_keeper(lines_cleared);
 		}
 		await new Promise(resolve => setTimeout(resolve, DELAY_TICK));
 	}
