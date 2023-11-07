@@ -408,10 +408,11 @@ export class GFX {
 
 	/* UI drawing methods below */
 
-	draw_all_ui_elements(piece_counter){
+	draw_all_ui_elements(piece_counter, queue){
 		this.draw_ui_background();
 		this.draw_ui_text("TetrisJS", 30, this.ui_offset + (this.ui_width/2), 30);
 		this.draw_ui_stats(piece_counter);
+		this.draw_ui_queue(queue);
 	}
 
 	draw_ui_background(){
@@ -451,28 +452,39 @@ export class GFX {
 	}
 
 	draw_ui_stats(piece_counter){
-		let x = 50;
+		let x = this.ui_offset + 50;
 		let x_gap = 25;
-		let yi = 355;
+		let yi = this.ui_offset + 355;
 		let yi_inc = 50;
 		let i_piece = TET_UI[0];
 
-		this.draw_ui_text("Statistics", 20, this.ui_offset + x, 70);
-		this.draw_ui_mini_piece(i_piece, this.ui_offset + x, this.ui_offset + 280);
-		this.draw_ui_text(piece_counter[P_TYPE.I].toString(), 20, this.ui_offset + x + x_gap, 128);
+		this.draw_ui_text("Statistics", 20, x, 70);
+		this.draw_ui_mini_piece(i_piece, x, this.ui_offset + 280);
+		this.draw_ui_text(piece_counter[P_TYPE.I].toString(), 20, x + x_gap, 128);
 		
 		let dy = 185;
 		let dy_inc = 50;
 		for (let i = 1; i < TET_UI.length; i++){
 			let piece = TET_UI[i];
-			this.draw_ui_mini_piece(piece, this.ui_offset + x, this.ui_offset + yi);	
-			this.draw_ui_text(piece_counter[piece.type], 20, this.ui_offset + x + x_gap, dy);
+			this.draw_ui_mini_piece(piece, x, yi);	
+			this.draw_ui_text(piece_counter[piece.type], 20, x + x_gap, dy);
 			yi += yi_inc;
 			dy += dy_inc;
 		}
 	}
 
-	draw_ui_queue(count=3){ // Draw 'count' next pieces
+	draw_ui_queue(queue, count=5){ // Draw 'count' next pieces
+		let x = this.ui_offset + 220;
+		let y = this.ui_offset + 300;
+		let y_inc = 50;
 
+		this.draw_ui_text("Next Piece", 20, x, 70);
+		for (let i = 0; i < count; i++){
+			let piece = queue[i];
+			this.draw_ui_mini_piece(piece, x, y);
+			if (piece.type == P_TYPE.I)
+				y += 25;
+			y += y_inc;
+		}
 	}
 }

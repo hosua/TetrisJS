@@ -27,6 +27,9 @@ let queue = [
 	tetris.spawn_rand_piece(),
 	tetris.spawn_rand_piece(),
 	tetris.spawn_rand_piece(),
+	tetris.spawn_rand_piece(),
+	tetris.spawn_rand_piece(),
+	tetris.spawn_rand_piece(),
 ];
 
 function handle_input(e){
@@ -56,7 +59,7 @@ piece_counter[tetronimo.type]++;
 
 while (true){
 	while (!tetris.check_gameover()){
-		gfx.draw_all_ui_elements(piece_counter);
+		gfx.draw_all_ui_elements(piece_counter, queue);
 		while (tetronimo.fall(tetris.grid)){
 			gfx.draw_all_game_elements(tetris.grid, tetronimo);
 			await new Promise(resolve => setTimeout(resolve, FALL_TICK));
