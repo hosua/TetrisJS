@@ -2,9 +2,8 @@ import { GFX, Tetris, Tetronimo, P_TYPE, KEY } from "./Tetris.js"
 
 const DELAY_TICK = 50; // additional wait time after a piece lands
 
-const START_LEVEL = 0;
 let gfx = new GFX();
-let tetris = new Tetris(START_LEVEL);
+let tetris = new Tetris(10);
 
 function handle_input(e) {
 	let keycode = e.keyCode;

@@ -1,10 +1,9 @@
 import { GFX, Tetris, Tetronimo, P_TYPE, KEY } from "./Tetris.js"
 
-const DELAY_TICK = 50; // additional wait time after a piece lands
+const DELAY_TICK = 100; // additional wait time after a piece lands
 
-const START_LEVEL = 0;
 let gfx = new GFX();
-let tetris = new Tetris(START_LEVEL);
+let tetris = new Tetris(10);
 
 function handle_input(e) {
 	let keycode = e.keyCode;
@@ -46,7 +45,7 @@ while (true) {
 			gfx.draw_all_game_elements(tetris.grid, tetronimo);
 			tetris.score_keeper(lines_cleared_this_turn);
 		}
-		await new Promise(resolve => setTimeout(resolve, DELAY_TICK));
+		// await new Promise(resolve => setTimeout(resolve, DELAY_TICK));
 	}
 	gfx = new GFX();
 	tetris = new Tetris();

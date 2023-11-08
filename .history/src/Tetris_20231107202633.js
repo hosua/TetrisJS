@@ -259,7 +259,7 @@ export class Tetris {
 
 	// If any pieces land above where the game renders, it's game over
 	check_gameover() {
-		for (let y = 2; y < 4; y++) {
+		for (let y = 3; y < 5; y++) {
 			for (let x = 0; x < PLAYFIELD_XMAX; x++) {
 				if (this.grid[y][x] !== P_TYPE.NONE) {
 					console.log("Game over!");
@@ -277,9 +277,11 @@ export class Tetris {
 
 	// checks and clears all full lines, returns how many lines were cleared 
 	clear_lines() {
+		console.log("Checking for full lines");
 		let lines_cleared = 0;
 		// Do a downward scan to see if line is full
 		for (let y = 5; y < PLAYFIELD_YMAX; y++) {
+			console.log(`y: ${y}`);
 			let is_full = true;
 
 			// scan the line
@@ -312,6 +314,8 @@ export class Tetris {
 		if (lines_cleared == 4)
 			this.tetris_count++;
 
+		this.lines_until_level_up - lines_cleared;
+
 		// n = level
 		// 1 line 		2 line 			3 line 			4 line
 		// 40 * (n + 1)	100 * (n + 1)	300 * (n + 1)	1200 * (n + 1)
@@ -330,13 +334,6 @@ export class Tetris {
 				break;
 		}
 
-		this.lines_until_level_up -= lines_cleared;
-		console.log(`lines until level up: ${this.lines_until_level_up}`)
-		if (this.lines_until_level_up <= 0) {
-			this.lines_until_level_up += 10;
-			this.level++;
-			this.update_fall_speed();
-		}
 	}
 
 	// When level up happens, speed up the fall speed.

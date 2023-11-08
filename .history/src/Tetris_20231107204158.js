@@ -239,7 +239,7 @@ export class Tetris {
 
 		this.score = 0;
 		this.level = start_level;
-		this.lines_until_level_up = 10;
+		this.lines_until_level_up = 1;
 		this.lines_cleared = 0;
 		this.tetris_count = 0;
 		this.fall_tick = 0; // ms per grid
@@ -331,7 +331,7 @@ export class Tetris {
 		}
 
 		this.lines_until_level_up -= lines_cleared;
-		console.log(`lines until level up: ${this.lines_until_level_up}`)
+		console.log(`lines till level up: ${this.lines_until_level_up}`)
 		if (this.lines_until_level_up <= 0) {
 			this.lines_until_level_up += 10;
 			this.level++;

@@ -239,135 +239,116 @@ export class Tetris {
 
 		this.score = 0;
 		this.level = start_level;
-		this.lines_until_level_up = 10;
 		this.lines_cleared = 0;
 		this.tetris_count = 0;
 		this.fall_tick = 0; // ms per grid
 		this.update_fall_speed();
-
 		this.queue = [];
-		this.populate_queue()
-	}
+		for (let i = 0; i < 10; i++)
+			queue.push(tetris.spawn_rand_piece())
 
-	print_grid() { console.log(this.grid); }
+		print_grid() { console.log(this.grid); }
 
-	populate_queue(n = 10) {
-		this.queue = [];
-		for (let i = 0; i < n; i++)
-			this.queue.push(this.spawn_rand_piece())
-	}
-
-	// If any pieces land above where the game renders, it's game over
-	check_gameover() {
-		for (let y = 2; y < 4; y++) {
-			for (let x = 0; x < PLAYFIELD_XMAX; x++) {
-				if (this.grid[y][x] !== P_TYPE.NONE) {
-					console.log("Game over!");
-					return true;
-				}
-			}
-		}
-		return false;
-	}
-
-	spawn_rand_piece() {
-		let rand_type = Math.round(Math.random() * (P_TYPE.L - 1) + 1);
-		return new Tetronimo(rand_type);
-	}
-
-	// checks and clears all full lines, returns how many lines were cleared 
-	clear_lines() {
-		let lines_cleared = 0;
-		// Do a downward scan to see if line is full
-		for (let y = 5; y < PLAYFIELD_YMAX; y++) {
-			let is_full = true;
-
-			// scan the line
-			for (let x = 0; x < PLAYFIELD_XMAX; x++) {
-				if (this.grid[y][x] === P_TYPE.NONE) {
-					is_full = false;
-					break;
-				}
-			}
-
-			if (is_full) {
-				console.log(`Detected full line at ${y}`);
-				// clear the current line
+		// If any pieces land above where the game renders, it's game over
+		check_gameover() {
+			for (let y = 3; y < 5; y++) {
 				for (let x = 0; x < PLAYFIELD_XMAX; x++) {
-					this.grid[y][x] = P_TYPE.NONE;
+					if (this.grid[y][x] !== P_TYPE.NONE) {
+						console.log("Game over!");
+						return true;
+					}
 				}
-				// shift all lines above from current y coordinate down 1
-				for (let yy = y; yy >= 5; yy--) {
-					this.grid[yy] = this.grid[yy - 1]
+			}
+			return false;
+		}
+
+		spawn_rand_piece() {
+			let rand_type = Math.round(Math.random() * (P_TYPE.L - 1) + 1);
+			return new Tetronimo(rand_type);
+		}
+
+		// checks and clears all full lines, returns how many lines were cleared 
+		clear_lines() {
+			console.log("Checking for full lines");
+			let lines_cleared = 0;
+			// Do a downward scan to see if line is full
+			for (let y = 5; y < PLAYFIELD_YMAX; y++) {
+				console.log(`y: ${y}`);
+				let is_full = true;
+
+				// scan the line
+				for (let x = 0; x < PLAYFIELD_XMAX; x++) {
+					if (this.grid[y][x] === P_TYPE.NONE) {
+						is_full = false;
+						break;
+					}
 				}
-				lines_cleared++; // will be used for scoring when it's implemented
+
+				if (is_full) {
+					console.log(`Detected full line at ${y}`);
+					// clear the current line
+					for (let x = 0; x < PLAYFIELD_XMAX; x++) {
+						this.grid[y][x] = P_TYPE.NONE;
+					}
+					// shift all lines above from current y coordinate down 1
+					for (let yy = y; yy >= 5; yy--) {
+						this.grid[yy] = this.grid[yy - 1]
+					}
+					lines_cleared++; // will be used for scoring when it's implemented
+				}
+			}
+			return lines_cleared;
+		}
+
+		score_keeper(lines_cleared) {
+			// n = level
+			// 1 line 		2 line 			3 line 			4 line
+			// 40 * (n + 1)	100 * (n + 1)	300 * (n + 1)	1200 * (n + 1)
+			switch (lines_cleared) {
+				case 1:
+					this.score += 40 * (this.level + 1);
+					break;
+				case 2:
+					this.score += 100 * (this.level + 1);
+					break;
+				case 3:
+					this.score += 300 * (this.level + 1);
+					break;
+				case 4:
+					this.score += 1200 * (this.level + 1);
+					break;
 			}
 		}
-		return lines_cleared;
-	}
 
-	// keeps track of lines cleared, tetrises, and score, also handles level up when they should happen
-	score_keeper(lines_cleared) {
-		this.lines_cleared += lines_cleared;
-		if (lines_cleared == 4)
-			this.tetris_count++;
-
-		// n = level
-		// 1 line 		2 line 			3 line 			4 line
-		// 40 * (n + 1)	100 * (n + 1)	300 * (n + 1)	1200 * (n + 1)
-		switch (lines_cleared) {
-			case 1:
-				this.score += 40 * (this.level + 1);
-				break;
-			case 2:
-				this.score += 100 * (this.level + 1);
-				break;
-			case 3:
-				this.score += 300 * (this.level + 1);
-				break;
-			case 4:
-				this.score += 1200 * (this.level + 1);
-				break;
-		}
-
-		this.lines_until_level_up -= lines_cleared;
-		console.log(`lines until level up: ${this.lines_until_level_up}`)
-		if (this.lines_until_level_up <= 0) {
-			this.lines_until_level_up += 10;
-			this.level++;
-			this.update_fall_speed();
+		// When level up happens, speed up the fall speed.
+		update_fall_speed() {
+			if (this.level < 9)
+				this.fall_tick = (48 - (5 * (this.level + 1))) * 61;
+			else if (this.level == 9)
+				this.fall_tick = 6 * 61;
+			else if (this.level < 13)
+				this.fall_tick = 5 * 61;
+			else if (this.level < 16)
+				this.fall_tick = 4 * 61;
+			else if (this.level < 16)
+				this.fall_tick = 3 * 61;
+			else if (this.level < 19)
+				this.fall_tick = 2 * 61;
+			else
+				this.fall_tick = 1 * 61;
 		}
 	}
 
-	// When level up happens, speed up the fall speed.
-	update_fall_speed() {
-		if (this.level < 9)
-			this.fall_tick = (48 - (5 * (this.level + 1))) * 61;
-		else if (this.level == 9)
-			this.fall_tick = 6 * 61;
-		else if (this.level < 13)
-			this.fall_tick = 5 * 61;
-		else if (this.level < 16)
-			this.fall_tick = 4 * 61;
-		else if (this.level < 16)
-			this.fall_tick = 3 * 61;
-		else if (this.level < 19)
-			this.fall_tick = 2 * 61;
-		else
-			this.fall_tick = 1 * 61;
-	}
-}
-
-// Tetronimo objects for drawing UI
-const TET_UI = [
-	new Tetronimo(P_TYPE.I),
-	new Tetronimo(P_TYPE.O),
-	new Tetronimo(P_TYPE.T),
-	new Tetronimo(P_TYPE.J),
-	new Tetronimo(P_TYPE.L),
-	new Tetronimo(P_TYPE.S),
-	new Tetronimo(P_TYPE.Z),
-]
+	// Tetronimo objects for drawing UI
+	const TET_UI = [
+		new Tetronimo(P_TYPE.I),
+		new Tetronimo(P_TYPE.O),
+		new Tetronimo(P_TYPE.T),
+		new Tetronimo(P_TYPE.J),
+		new Tetronimo(P_TYPE.L),
+		new Tetronimo(P_TYPE.S),
+		new Tetronimo(P_TYPE.Z),
+	]
 
 export class GFX {
 	constructor() {
@@ -464,15 +445,14 @@ export class GFX {
 
 	/* UI drawing methods below */
 
-	draw_ui_all(tetris) {
+	draw_ui_all(piece_counter, queue, score) {
 		this.draw_ui_background();
 		this.draw_ui_text("TetrisJS", 30, this.ui_offset + (this.ui_width / 2), 32);
-		this.draw_ui_stats(tetris.piece_counter);
-		this.draw_ui_queue(tetris);
-		this.draw_ui_text("Made by Hoswoo", 20, this.ui_offset + (this.ui_width / 2), bg_canvas.height - 15);
-		this.draw_ui_score(tetris);
-		this.draw_ui_level(tetris);
-		this.draw_lines_cleared(tetris);
+		this.draw_ui_stats(piece_counter);
+		this.draw_ui_queue(queue);
+		this.draw_ui_text("Made by Hoswoo", 20, this.ui_offset + (this.ui_width / 2), bg_canvas.height - 25);
+		this.draw_ui_score(score);
+		this.draw_ui_level()
 	}
 
 	draw_ui_background() {
@@ -511,14 +491,14 @@ export class GFX {
 		ctx.fillText(text, x, y);
 	}
 
-	draw_ui_queue(tetris, count = 5) { // Draw 'count' next pieces
+	draw_ui_queue(queue, count = 5) { // Draw 'count' next pieces
 		let x = this.ui_offset + 80;
 		let y = this.ui_offset + 280;
 		let y_inc = 50;
 
 		this.draw_ui_text("Next piece", 20, x, 70);
 		for (let i = 0; i < count; i++) {
-			let piece = tetris.queue[i];
+			let piece = queue[i];
 			this.draw_ui_mini_piece(piece, x + 15, y);
 			if (piece.type == P_TYPE.I)
 				y += 25;
@@ -549,28 +529,20 @@ export class GFX {
 	}
 
 	draw_ui_score(tetris) {
-		let x = this.ui_offset + 100;
-		let y = 725;
-		let y_inc = 25;
-		this.draw_ui_text(`SCORE`, 20, x - 48, y);
-		this.draw_ui_text(`${tetris.score.toString().padStart(10, '0')}`, 30, x, y + y_inc);
+		let x = this.ui_offset + 150;
+		let y = 740;
+		this.draw_ui_text(`Score: ${tetris.score.toString().padStart(10, '0')}`, 30, x, y);
 	}
 
 	draw_ui_level(tetris) {
-		let x = this.ui_offset + 285;
-		let y = 725;
-		let y_inc = 25;
-		this.draw_ui_text(`LEVEL`, 20, x - 48, y);
-		this.draw_ui_text(`${tetris.level.toString().padStart(2, '0')}`, 30, x - 65, y + y_inc);
+		let x = this.ui_offset + 150;
+		let y = 500;
+		this.draw_ui_text(`Level: ${tetris.level.toString().padStart(2, '0')}`, 30, x, y);
 	}
 
-	draw_lines_cleared(tetris) { // also displays tetris count
-		let x = this.ui_offset + 100;
-		let y = 675;
-		let y_inc = 25;
-		this.draw_ui_text(`LINES`, 20, x - 54, y);
-		this.draw_ui_text(`${tetris.lines_cleared.toString().padStart(3, '0')} `, 30, x - 54, y + y_inc);
-		this.draw_ui_text(`TETRIS`, 20, x + 140, y)
-		this.draw_ui_text(`${tetris.tetris_count.toString().padStart(3, '0')}`, 30, x + 130, y + y_inc);
+	draw_lines_cleared(tetris) { // also draws number of tetrises
+		let x = this.ui_offset + 150;
+		let y = 550;
+		this.draw_ui_text(`Level: ${level.toString().padStart(4, '0')}`, 30, x, y);
 	}
 }

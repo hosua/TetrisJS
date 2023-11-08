@@ -1,13 +1,15 @@
 import { GFX, Tetris, Tetronimo, P_TYPE, KEY } from "./Tetris.js"
 
-const DELAY_TICK = 50; // additional wait time after a piece lands
+const FALL_TICK = 200; // If we ever implement levels, this determines the difficulty
+const DELAY_TICK = 200; // additional wait time after a piece lands
+const CLEAR_DELAY = 200; // additional wait time before a line is cleared
 
-const START_LEVEL = 0;
 let gfx = new GFX();
-let tetris = new Tetris(START_LEVEL);
+let tetris = new Tetris(15);
 
 function handle_input(e) {
 	let keycode = e.keyCode;
+	console.log(`Pressing ${keycode}`);
 	switch (keycode) {
 		case KEY.LEFT:
 		case KEY.RIGHT:
@@ -28,26 +30,29 @@ function handle_input(e) {
 document.addEventListener('keydown', (e) => { return handle_input(e); });
 
 let tetronimo = tetris.queue.shift();
-tetris.piece_counter[tetronimo.type]++;
+piece_counter[tetronimo.type]++;
 
 while (true) {
 	while (!tetris.check_gameover()) {
-		gfx.draw_ui_all(tetris);
+		gfx.draw_ui_all(piece_counter, queue, tetris.score);
 		while (tetronimo.fall(tetris.grid)) {
 			gfx.draw_all_game_elements(tetris.grid, tetronimo);
 			await new Promise(resolve => setTimeout(resolve, tetris.fall_tick));
+			console.log(`fall tick: ${tetris.fall_tick}`);
 		}
-		tetronimo = tetris.queue.shift();
-		tetris.queue.push(tetris.spawn_rand_piece());
-		tetris.piece_counter[tetronimo.type]++;
+		tetronimo = queue.shift();
+		queue.push(tetris.spawn_rand_piece());
+		piece_counter[tetronimo.type]++;
 
-		let lines_cleared_this_turn = tetris.clear_lines();
-		if (lines_cleared_this_turn > 0) {
+		let lines_cleared = tetris.clear_lines();
+		if (lines_cleared > 0) {
+			await new Promise(resolve => setTimeout(resolve, CLEAR_DELAY));
 			gfx.draw_all_game_elements(tetris.grid, tetronimo);
-			tetris.score_keeper(lines_cleared_this_turn);
+			tetris.score_keeper(lines_cleared);
 		}
 		await new Promise(resolve => setTimeout(resolve, DELAY_TICK));
 	}
 	gfx = new GFX();
 	tetris = new Tetris();
+	reset_piece_counter(piece_counter);
 }

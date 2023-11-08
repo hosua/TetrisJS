@@ -239,7 +239,6 @@ export class Tetris {
 
 		this.score = 0;
 		this.level = start_level;
-		this.lines_until_level_up = 10;
 		this.lines_cleared = 0;
 		this.tetris_count = 0;
 		this.fall_tick = 0; // ms per grid
@@ -259,7 +258,7 @@ export class Tetris {
 
 	// If any pieces land above where the game renders, it's game over
 	check_gameover() {
-		for (let y = 2; y < 4; y++) {
+		for (let y = 3; y < 5; y++) {
 			for (let x = 0; x < PLAYFIELD_XMAX; x++) {
 				if (this.grid[y][x] !== P_TYPE.NONE) {
 					console.log("Game over!");
@@ -277,9 +276,11 @@ export class Tetris {
 
 	// checks and clears all full lines, returns how many lines were cleared 
 	clear_lines() {
+		console.log("Checking for full lines");
 		let lines_cleared = 0;
 		// Do a downward scan to see if line is full
 		for (let y = 5; y < PLAYFIELD_YMAX; y++) {
+			console.log(`y: ${y}`);
 			let is_full = true;
 
 			// scan the line
@@ -306,12 +307,7 @@ export class Tetris {
 		return lines_cleared;
 	}
 
-	// keeps track of lines cleared, tetrises, and score, also handles level up when they should happen
 	score_keeper(lines_cleared) {
-		this.lines_cleared += lines_cleared;
-		if (lines_cleared == 4)
-			this.tetris_count++;
-
 		// n = level
 		// 1 line 		2 line 			3 line 			4 line
 		// 40 * (n + 1)	100 * (n + 1)	300 * (n + 1)	1200 * (n + 1)
@@ -328,14 +324,6 @@ export class Tetris {
 			case 4:
 				this.score += 1200 * (this.level + 1);
 				break;
-		}
-
-		this.lines_until_level_up -= lines_cleared;
-		console.log(`lines until level up: ${this.lines_until_level_up}`)
-		if (this.lines_until_level_up <= 0) {
-			this.lines_until_level_up += 10;
-			this.level++;
-			this.update_fall_speed();
 		}
 	}
 
@@ -568,9 +556,8 @@ export class GFX {
 		let x = this.ui_offset + 100;
 		let y = 675;
 		let y_inc = 25;
-		this.draw_ui_text(`LINES`, 20, x - 54, y);
-		this.draw_ui_text(`${tetris.lines_cleared.toString().padStart(3, '0')} `, 30, x - 54, y + y_inc);
-		this.draw_ui_text(`TETRIS`, 20, x + 140, y)
-		this.draw_ui_text(`${tetris.tetris_count.toString().padStart(3, '0')}`, 30, x + 130, y + y_inc);
+		this.draw_ui_text(`LINES`, 20, x - 48, y);
+		this.draw_ui_text(`${tetris.lines_cleared.toString().padStart(3, '0')} `, 30, x - 50, y + y_inc);
+		this.draw_ui_text(`Tetris: `)
 	}
 }

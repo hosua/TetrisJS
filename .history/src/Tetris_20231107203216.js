@@ -331,12 +331,9 @@ export class Tetris {
 		}
 
 		this.lines_until_level_up -= lines_cleared;
-		console.log(`lines until level up: ${this.lines_until_level_up}`)
-		if (this.lines_until_level_up <= 0) {
+		console.log(`lines till level up: ${this.lines_until_level_up}`)
+		if (this.lines_until_level_up <= 0)
 			this.lines_until_level_up += 10;
-			this.level++;
-			this.update_fall_speed();
-		}
 	}
 
 	// When level up happens, speed up the fall speed.
