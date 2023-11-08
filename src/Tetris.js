@@ -1,11 +1,21 @@
-const bg_canvas = document.getElementById("background-canvas");
-const tetris_canvas = document.getElementById("tetris-canvas");
+export const bg_canvas = document.getElementById("background-canvas");
+export const tetris_canvas = document.getElementById("tetris-canvas");
+
+bg_canvas.style.position = "absolute";
+tetris_canvas.style.position = "absolute";
+bg_canvas.style.top = "50";
+bg_canvas.style.left = "50";
+tetris_canvas.style.top = "50";
+tetris_canvas.style.left = "50";
 
 const BG_COLOR = "#242424";
 const FIELD_COLOR = "grey";
 const PLAYFIELD_YMAX = 25;
 const PLAYFIELD_XMAX = 10;
 const Y_OFF = 5;
+
+const ctx_bg = bg_canvas.getContext('2d');
+const ctx_tetris = tetris_canvas.getContext('2d')
 
 const DEFAULT_ORIGIN = [5, 4];
 
@@ -253,6 +263,7 @@ export class Tetris {
 
 		this.hold = null;
 		this.held_this_turn = false;
+
 	}
 
 	get_next_piece() {
@@ -400,49 +411,53 @@ const TET_UI = [
 
 export class GFX {
 	constructor() {
-		bg_canvas.style.position = "absolute";
-		tetris_canvas.style.position = "absolute";
-		bg_canvas.style.top = "50";
-		bg_canvas.style.left = "50";
-		tetris_canvas.style.top = "50";
-		tetris_canvas.style.left = "50";
 		this.ui_offset = tetris_canvas.width;
 		this.ui_width = bg_canvas.width - tetris_canvas.width;
+
+		// We'll use these canvases as buffers so that we don't have to keep redrawing the grids
+		this.empty_grid_canvas = document.createElement("canvas");
+		this.ctx_empty_grid = this.empty_grid_canvas.getContext('2d');
+
+		this.grid_buf_canvas = document.createElement("canvas");
+		this.ctx_grid_buf = this.grid_buf_canvas.getContext('2d');
+
+		this.grid_buf_canvas.width = this.empty_grid_canvas.width = tetris_canvas.width;
+		this.grid_buf_canvas.height = this.empty_grid_canvas.height = tetris_canvas.height;
+
+		this.reset();
 	}
 
-	clear() {
-		const tetris_ctx = tetris_canvas.getContext("2d");
-		const bg_ctx = bg_canvas.getContext("2d");
-		tetris_ctx.clearRect(0, 0, tetris_canvas.width, tetris_canvas.height)
-		bg_ctx.clearRect(0, 0, bg_canvas.width, bg_canvas.height)
+	reset() {
+		this.draw_playfield(this.ctx_empty_grid)
+		ctx_tetris.drawImage(this.empty_grid_canvas, 0, 0);
+		this.ctx_grid_buf.drawImage(this.empty_grid_canvas, 0, 0)
 	}
 
-	draw_playfield() {
-		const ctx = tetris_canvas.getContext("2d");
+	draw_playfield(ctx = ctx_tetris) {
+		const draw_gridlines = () => {
+			const horiz_inc = tetris_canvas.height / 20;
+			const vert_inc = tetris_canvas.width / 10;
+
+			// Draw horizontal lines
+			for (let y = 0; y < tetris_canvas.height; y += horiz_inc) {
+				ctx.beginPath();
+				ctx.moveTo(0, y);
+				ctx.lineTo(tetris_canvas.width, y);
+				ctx.stroke();
+			}
+			// Draw vertical lines
+			for (let x = 0; x < tetris_canvas.width; x += vert_inc) {
+				ctx.beginPath();
+				ctx.moveTo(x, 0);
+				ctx.lineTo(x, tetris_canvas.height);
+				ctx.stroke();
+			}
+		}
 		ctx.fillStyle = FIELD_COLOR;
 		ctx.fillRect(0, 0, tetris_canvas.width, tetris_canvas.height);
+		draw_gridlines(ctx);
 	}
 
-	draw_gridlines() {
-		const ctx = tetris_canvas.getContext("2d");
-		const horiz_inc = tetris_canvas.height / 20;
-		const vert_inc = tetris_canvas.width / 10;
-
-		// Draw horizontal lines
-		for (let y = 0; y < tetris_canvas.height; y += horiz_inc) {
-			ctx.beginPath();
-			ctx.moveTo(0, y);
-			ctx.lineTo(tetris_canvas.width, y);
-			ctx.stroke();
-		}
-		// Draw vertical lines
-		for (let x = 0; x < tetris_canvas.width; x += vert_inc) {
-			ctx.beginPath();
-			ctx.moveTo(x, 0);
-			ctx.lineTo(x, tetris_canvas.height);
-			ctx.stroke();
-		}
-	}
 
 	// Draw the actual pieces and shit on the 2d grid (except the piece currently in motion)
 	draw_grid_elements(grid) {
@@ -457,13 +472,24 @@ export class GFX {
 				let dy = (y - Y_OFF) * vert_inc;
 				if (grid[y][x] != P_TYPE.NONE) {
 					ctx.fillStyle = P_COLORS[grid[y][x]];
-					ctx.beginPath();
-					ctx.rect(dx, dy, horiz_inc, vert_inc);
-					ctx.fill();
-					ctx.stroke();
+					ctx.fillRect(dx, dy, horiz_inc, vert_inc)
 				}
 			}
 		}
+	}
+
+	// use this after a piece landed because we need to store the new piece into the buffer.
+	copy_grid_into_grid_buf() {
+		let src = tetris_canvas; // grid is in the tetris_canvas
+		let dest = this.ctx_grid_buf;
+		dest.drawImage(src, 0, 0);
+	}
+
+	// use this every time we need to redraw the grid for a falling piece
+	copy_grid_buf_into_tetris_canvas() {
+		let src = this.grid_buf_canvas;
+		let dest = ctx_tetris;
+		dest.drawImage(src, 0, 0);
 	}
 
 	// this will draw the tetronimo in motion
@@ -482,19 +508,8 @@ export class GFX {
 		for (let block of blocks) {
 			let dx = (origin[0] + block[0]) * horiz_inc;
 			let dy = (origin[1] + block[1] - Y_OFF) * vert_inc;
-			ctx.beginPath();
-			ctx.rect(dx, dy, horiz_inc, vert_inc);
-			ctx.fill();
-			ctx.stroke();
+			ctx.fillRect(dx, dy, horiz_inc, vert_inc)
 		}
-	}
-
-	draw_all_game_elements(grid, tetronimo) {
-		// this.draw_background();
-		this.draw_playfield();
-		this.draw_grid_elements(grid);
-		this.draw_gridlines();
-		this.draw_falling_tetronimo(tetronimo);
 	}
 
 	/* UI drawing methods below */
@@ -532,10 +547,7 @@ export class GFX {
 		for (let block of blocks) {
 			let dx = x + x_off + (origin[0] + block[0]) * dim;
 			let dy = y + y_off + (origin[1] + block[1]) * dim;
-			ctx.beginPath();
-			ctx.rect(dx, dy, dim, dim);
-			ctx.fill();
-			ctx.stroke();
+			ctx.fillRect(dx, dy, dim, dim)
 		}
 	}
 

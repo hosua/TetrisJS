@@ -1,4 +1,4 @@
-import { GFX, Tetris, Tetronimo, P_TYPE, KEY } from "./Tetris.js"
+import { bg_canvas, tetris_canvas, GFX, Tetris, Tetronimo, P_TYPE, KEY } from "./Tetris.js"
 
 const FPS = 61;
 const START_LEVEL = 0;
@@ -30,8 +30,8 @@ function handle_input(e) {
 			tetronimo.hard_drop(tetris);
 			break;
 	}
-	requestAnimationFrame(handle_input)
-	gfx.draw_all_game_elements(tetris.grid, tetronimo);
+	gfx.copy_grid_buf_into_tetris_canvas();
+	gfx.draw_falling_tetronimo(tetronimo);
 }
 
 document.addEventListener('keydown', (e) => { return handle_input(e); });
@@ -41,7 +41,6 @@ tetris.piece_counter[tetronimo.type]++;
 
 function game_loop(curr_time) {
 	requestAnimationFrame(game_loop)
-	gfx.clear();
 	if (!tetris.check_gameover()) {
 		const delta_frame = curr_time - prev.frame;
 		if (delta_frame > interval) {
@@ -51,7 +50,8 @@ function game_loop(curr_time) {
 			if (delta_fall > tetris.fall_interval) {
 				prev.fall = curr_time - (delta_fall % tetris.fall_interval);
 				tetronimo.fall(tetris);
-
+				gfx.copy_grid_buf_into_tetris_canvas();
+				gfx.draw_falling_tetronimo(tetronimo);
 			}
 
 			if (!tetronimo.is_falling) {
@@ -61,15 +61,17 @@ function game_loop(curr_time) {
 				let lines_cleared_this_turn = tetris.clear_lines();
 				if (lines_cleared_this_turn > 0)
 					tetris.score_keeper(lines_cleared_this_turn);
+				// when the tetronimo lands, we need to draw the new piece on the grid,
+				gfx.draw_grid_elements(tetris.grid);
+				// then the grid buffer needs to be set to the current grid's state
+				gfx.copy_grid_into_grid_buf();
 			}
+			gfx.draw_ui_all(tetris);
 		}
 	} else {
+		gfx.reset();
 		tetris.reset(START_LEVEL)
 	}
-	gfx.draw_ui_all(tetris);
-	gfx.draw_all_game_elements(tetris.grid, tetronimo);
 }
 
-gfx.draw_all_game_elements(tetris.grid, tetronimo);
-gfx.draw_ui_all(tetris);
 requestAnimationFrame(game_loop)
