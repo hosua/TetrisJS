@@ -495,7 +495,6 @@ export class GFX {
 		this.draw_ui_text("TetrisJS", 30, this.ui_offset + (this.ui_width / 2), 32);
 		this.draw_ui_stats(tetris.piece_counter);
 		this.draw_ui_queue(tetris);
-		this.draw_held_piece(tetris);
 		this.draw_ui_text("Made by Hoswoo", 20, this.ui_offset + (this.ui_width / 2), bg_canvas.height - 15);
 		this.draw_ui_score(tetris);
 		this.draw_ui_level(tetris);
@@ -599,13 +598,5 @@ export class GFX {
 		this.draw_ui_text(`${tetris.lines_cleared.toString().padStart(3, '0')} `, 30, x - 54, y + y_inc);
 		this.draw_ui_text(`TETRIS`, 20, x + 140, y)
 		this.draw_ui_text(`${tetris.tetris_count.toString().padStart(3, '0')}`, 30, x + 130, y + y_inc);
-	}
-
-	draw_held_piece(tetris) {
-		let x = this.ui_offset + 100;
-		let y = 1140;
-		this.draw_ui_text(`HOLD`, 20, x - 55, 550);
-		if (tetris.hold)
-			this.draw_ui_mini_piece(tetris.hold, x - 38, 1140)
 	}
 }

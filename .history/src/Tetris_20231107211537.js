@@ -606,6 +606,6 @@ export class GFX {
 		let y = 1140;
 		this.draw_ui_text(`HOLD`, 20, x - 55, 550);
 		if (tetris.hold)
-			this.draw_ui_mini_piece(tetris.hold, x - 38, 1140)
+			this.draw_ui_mini_piece(tetris.hold, x + 50, 1140)
 	}
 }

@@ -39,7 +39,6 @@ while (true) {
 
 		while (tetronimo.fall(tetris.grid)) {
 			gfx.draw_all_game_elements(tetris.grid, tetronimo);
-			// await new Promise(resolve => setTimeout(resolve, tetris.fall_tick));
 			await new Promise(resolve => setTimeout(resolve, tetris.fall_tick));
 		}
 

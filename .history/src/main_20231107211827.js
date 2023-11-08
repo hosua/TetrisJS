@@ -39,7 +39,6 @@ while (true) {
 
 		while (tetronimo.fall(tetris.grid)) {
 			gfx.draw_all_game_elements(tetris.grid, tetronimo);
-			// await new Promise(resolve => setTimeout(resolve, tetris.fall_tick));
 			await new Promise(resolve => setTimeout(resolve, tetris.fall_tick));
 		}
 
@@ -51,7 +50,7 @@ while (true) {
 			gfx.draw_all_game_elements(tetris.grid, tetronimo);
 			tetris.score_keeper(lines_cleared_this_turn);
 		}
-		// await new Promise(resolve => setTimeout(resolve, DELAY_TICK));
+		await new Promise(resolve => setTimeout(resolve, DELAY_TICK));
 	}
 	gfx = new GFX();
 	tetris = new Tetris();

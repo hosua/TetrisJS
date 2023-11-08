@@ -253,9 +253,9 @@ export class Tetris {
 	}
 
 	get_next_piece() {
-		let tetronimo = this.queue.shift();
-		this.queue.push(this.spawn_rand_piece());
-		this.piece_counter[tetronimo.type]++;
+		let tetronimo = tetris.queue.shift();
+		tetris.queue.push(tetris.spawn_rand_piece());
+		tetris.piece_counter[tetronimo.type]++;
 		return tetronimo;
 	}
 
@@ -285,20 +285,13 @@ export class Tetris {
 
 	hold_piece(tetronimo) {
 		if (!this.held_this_turn) {
-			this.held_this_turn = true;
 			tetronimo.origin = [5, 4]
-			if (!this.hold) {
-				console.log("Storing in hold")
+			if (!this.hold) // store the tetronimo
 				this.hold = tetronimo;
-				tetronimo = this.get_next_piece();
-			} else {
-				console.log("swapping for hold")
-				const temp = this.hold;
-				this.hold = tetronimo;
-				tetronimo = temp;
-			}
+			else // swap
+				[tetronimo, this.hold] = [this.hold, tetronimo]
 		}
-		return tetronimo;
+		this.held_this_turn = true;
 	}
 
 	// checks and clears all full lines, returns how many lines were cleared 
@@ -495,7 +488,6 @@ export class GFX {
 		this.draw_ui_text("TetrisJS", 30, this.ui_offset + (this.ui_width / 2), 32);
 		this.draw_ui_stats(tetris.piece_counter);
 		this.draw_ui_queue(tetris);
-		this.draw_held_piece(tetris);
 		this.draw_ui_text("Made by Hoswoo", 20, this.ui_offset + (this.ui_width / 2), bg_canvas.height - 15);
 		this.draw_ui_score(tetris);
 		this.draw_ui_level(tetris);
@@ -599,13 +591,5 @@ export class GFX {
 		this.draw_ui_text(`${tetris.lines_cleared.toString().padStart(3, '0')} `, 30, x - 54, y + y_inc);
 		this.draw_ui_text(`TETRIS`, 20, x + 140, y)
 		this.draw_ui_text(`${tetris.tetris_count.toString().padStart(3, '0')}`, 30, x + 130, y + y_inc);
-	}
-
-	draw_held_piece(tetris) {
-		let x = this.ui_offset + 100;
-		let y = 1140;
-		this.draw_ui_text(`HOLD`, 20, x - 55, 550);
-		if (tetris.hold)
-			this.draw_ui_mini_piece(tetris.hold, x - 38, 1140)
 	}
 }
