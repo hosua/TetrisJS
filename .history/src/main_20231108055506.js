@@ -30,7 +30,6 @@ function handle_input(e) {
 			tetronimo.hard_drop(tetris);
 			break;
 	}
-	requestAnimationFrame(handle_input)
 	gfx.draw_all_game_elements(tetris.grid, tetronimo);
 }
 
@@ -45,13 +44,14 @@ function game_loop(curr_time) {
 		gfx.draw_ui_all(tetris);
 		const delta_frame = curr_time - prev.frame;
 		if (delta_frame > interval) {
+			gfx.draw_all_game_elements(tetris.grid, tetronimo);
 			prev.frame = curr_time - (delta_frame % interval)
 
 			const delta_fall = curr_time - prev.fall;
 			if (delta_fall > tetris.fall_interval) {
+				console.log(prev)
 				prev.fall = curr_time - (delta_fall % tetris.fall_interval);
 				tetronimo.fall(tetris);
-				requestAnimationFrame(game_loop)
 			}
 
 			if (!tetronimo.is_falling) {
@@ -66,10 +66,10 @@ function game_loop(curr_time) {
 			}
 		}
 	} else {
+		console.log(`Game over!`)
 		gfx = new GFX();
 		tetris = new Tetris();
 	}
-	gfx.draw_all_game_elements(tetris.grid, tetronimo);
 }
 gfx.draw_all_game_elements(tetris.grid, tetronimo);
 gfx.draw_ui_all(tetris);

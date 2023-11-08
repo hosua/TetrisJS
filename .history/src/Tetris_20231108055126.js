@@ -119,6 +119,7 @@ export class Tetronimo {
 		for (let block of this.blocks) {
 			let x = this.origin[0] + block[0];
 			let y = this.origin[1] + block[1];
+			console.log(x, y)
 			// check if min y pos is at bottom
 			if (y === PLAYFIELD_YMAX - 1) { // at bottom
 				this.is_falling = false;
@@ -219,6 +220,7 @@ export class Tetronimo {
 	}
 
 	hard_drop(tetris) {
+		console.log(`Calling hard_drop()`)
 		while (this.is_falling) {
 			this.fall(tetris);
 		}

@@ -7,7 +7,7 @@ const PLAYFIELD_YMAX = 25;
 const PLAYFIELD_XMAX = 10;
 const Y_OFF = 5;
 
-const DEFAULT_ORIGIN = [5, 4];
+const DEFAULT_ORIGIN = [5, 5];
 
 export const KEY = {
 	SPACE: 32, 								// hard drop
@@ -36,7 +36,6 @@ export class Tetronimo {
 		this.origin = [0, 0];
 		this.blocks = Array(4).fill([0, 0]); // block positions relative to origin
 		this.spawn_piece();
-		this.is_falling = true;
 	}
 
 	print() {
@@ -88,7 +87,7 @@ export class Tetronimo {
 	}
 
 	spawn_piece() {
-		this.origin = [...DEFAULT_ORIGIN];
+		this.origin = DEFAULT_ORIGIN;
 		switch (this.type) {
 			case P_TYPE.I:
 				this.blocks = [[0, -1], [0, 0], [0, 1], [0, 2]];
@@ -115,30 +114,37 @@ export class Tetronimo {
 	}
 
 	// This will check the grid to see if the piece can fall down. If it can, it will move piece down once.
-	fall(tetris) {
+	// returns true if still falling
+	fall(grid) {
+		let can_fall = true;
 		for (let block of this.blocks) {
 			let x = this.origin[0] + block[0];
 			let y = this.origin[1] + block[1];
+			// console.log(x, y);
 			// check if min y pos is at bottom
 			if (y === PLAYFIELD_YMAX - 1) { // at bottom
-				this.is_falling = false;
-			} else if (tetris.grid[y + 1][x] !== P_TYPE.NONE) { // if below piece is non-empty
-				this.is_falling = false;
+				can_fall = false;
+			} else if (grid[y + 1][x] !== P_TYPE.NONE) { // if below piece is non-empty
+				can_fall = false;
 			}
-			if (!this.is_falling)
+			if (!can_fall)
 				break;
 		}
-		if (this.is_falling)
-			this.origin[1] += 1;
-	}
 
-	set_to_grid(tetris) {
-		// set to tetris.grid
-		for (let block of this.blocks) {
-			let x = this.origin[0] + block[0];
-			let y = this.origin[1] + block[1];
-			tetris.grid[y][x] = this.type;
+
+		if (can_fall) {
+			// move down
+			this.origin[1] += 1;
+		} else {
+			// set to grid
+			for (let block of this.blocks) {
+				let x = this.origin[0] + block[0];
+				let y = this.origin[1] + block[1];
+				grid[y][x] = this.type;
+			}
 		}
+
+		return can_fall;
 	}
 
 	move(keycode, tetris) {
@@ -219,8 +225,8 @@ export class Tetronimo {
 	}
 
 	hard_drop(tetris) {
-		while (this.is_falling) {
-			this.fall(tetris);
+		while (this.fall(tetris.grid)) {
+			this.move(KEY.DOWN, tetris);
 		}
 	}
 }
@@ -238,7 +244,7 @@ export class Tetris {
 		this.lines_until_level_up = 10;
 		this.lines_cleared = 0;
 		this.tetris_count = 0;
-		this.fall_interval = 0; // ms per grid
+		this.fall_tick = 0; // ms per grid
 		this.update_fall_speed();
 
 		this.queue = [];
@@ -282,7 +288,7 @@ export class Tetris {
 	hold_piece(tetronimo) {
 		if (!this.held_this_turn) {
 			this.held_this_turn = true;
-			tetronimo.origin = [...DEFAULT_ORIGIN];
+			tetronimo.origin = DEFAULT_ORIGIN;
 			if (!this.hold) {
 				console.log("Storing in hold")
 				this.hold = tetronimo;
@@ -364,19 +370,19 @@ export class Tetris {
 	// When level up happens, speed up the fall speed.
 	update_fall_speed() {
 		if (this.level < 9)
-			this.fall_interval = (48 - (5 * (this.level + 1))) * 61;
+			this.fall_tick = (48 - (5 * (this.level + 1))) * 61;
 		else if (this.level == 9)
-			this.fall_interval = 6 * 61;
+			this.fall_tick = 6 * 61;
 		else if (this.level < 13)
-			this.fall_interval = 5 * 61;
+			this.fall_tick = 5 * 61;
 		else if (this.level < 16)
-			this.fall_interval = 4 * 61;
+			this.fall_tick = 4 * 61;
 		else if (this.level < 16)
-			this.fall_interval = 3 * 61;
+			this.fall_tick = 3 * 61;
 		else if (this.level < 19)
-			this.fall_interval = 2 * 61;
+			this.fall_tick = 2 * 61;
 		else
-			this.fall_interval = 1 * 61;
+			this.fall_tick = 1 * 61;
 	}
 }
 

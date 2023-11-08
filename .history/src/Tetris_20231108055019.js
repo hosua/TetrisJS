@@ -219,6 +219,7 @@ export class Tetronimo {
 	}
 
 	hard_drop(tetris) {
+		console.log(`Calling hard_drop()`)
 		while (this.is_falling) {
 			this.fall(tetris);
 		}

@@ -30,7 +30,6 @@ function handle_input(e) {
 			tetronimo.hard_drop(tetris);
 			break;
 	}
-	requestAnimationFrame(handle_input)
 	gfx.draw_all_game_elements(tetris.grid, tetronimo);
 }
 
@@ -51,7 +50,6 @@ function game_loop(curr_time) {
 			if (delta_fall > tetris.fall_interval) {
 				prev.fall = curr_time - (delta_fall % tetris.fall_interval);
 				tetronimo.fall(tetris);
-				requestAnimationFrame(game_loop)
 			}
 
 			if (!tetronimo.is_falling) {
@@ -65,11 +63,11 @@ function game_loop(curr_time) {
 				}
 			}
 		}
+		gfx.draw_all_game_elements(tetris.grid, tetronimo);
 	} else {
 		gfx = new GFX();
 		tetris = new Tetris();
 	}
-	gfx.draw_all_game_elements(tetris.grid, tetronimo);
 }
 gfx.draw_all_game_elements(tetris.grid, tetronimo);
 gfx.draw_ui_all(tetris);

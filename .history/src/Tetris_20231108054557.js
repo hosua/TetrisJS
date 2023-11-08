@@ -116,9 +116,12 @@ export class Tetronimo {
 
 	// This will check the grid to see if the piece can fall down. If it can, it will move piece down once.
 	fall(tetris) {
+		if (!this.is_falling)
+			break;
 		for (let block of this.blocks) {
 			let x = this.origin[0] + block[0];
 			let y = this.origin[1] + block[1];
+			// console.log(x, y);
 			// check if min y pos is at bottom
 			if (y === PLAYFIELD_YMAX - 1) { // at bottom
 				this.is_falling = false;
@@ -127,9 +130,8 @@ export class Tetronimo {
 			}
 			if (!this.is_falling)
 				break;
-		}
-		if (this.is_falling)
 			this.origin[1] += 1;
+		}
 	}
 
 	set_to_grid(tetris) {
@@ -219,8 +221,8 @@ export class Tetronimo {
 	}
 
 	hard_drop(tetris) {
-		while (this.is_falling) {
-			this.fall(tetris);
+		while (this.fall(tetris)) {
+			this.move(KEY.DOWN, tetris);
 		}
 	}
 }

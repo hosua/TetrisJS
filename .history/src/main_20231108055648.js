@@ -30,8 +30,8 @@ function handle_input(e) {
 			tetronimo.hard_drop(tetris);
 			break;
 	}
-	requestAnimationFrame(handle_input)
 	gfx.draw_all_game_elements(tetris.grid, tetronimo);
+	requestAnimationFrame(handle_input)
 }
 
 document.addEventListener('keydown', (e) => { return handle_input(e); });
