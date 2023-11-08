@@ -41,7 +41,6 @@ tetris.piece_counter[tetronimo.type]++;
 
 function game_loop(curr_time) {
 	requestAnimationFrame(game_loop)
-	gfx.clear();
 	if (!tetris.check_gameover()) {
 		const delta_frame = curr_time - prev.frame;
 		if (delta_frame > interval) {
@@ -51,20 +50,21 @@ function game_loop(curr_time) {
 			if (delta_fall > tetris.fall_interval) {
 				prev.fall = curr_time - (delta_fall % tetris.fall_interval);
 				tetronimo.fall(tetris);
-
 			}
 
 			if (!tetronimo.is_falling) {
-				tetris.held_this_turn = false;
 				// grab a piece from queue and spawn a new one
 				tetronimo = tetris.get_next_piece();
 				let lines_cleared_this_turn = tetris.clear_lines();
 				if (lines_cleared_this_turn > 0)
 					tetris.score_keeper(lines_cleared_this_turn);
+				tetris.held_this_turn = false;
+				tetronimo.set_to_grid(tetris)
 			}
 		}
 	} else {
-		tetris.reset(START_LEVEL)
+		gfx = new GFX();
+		tetris = new Tetris();
 	}
 	gfx.draw_ui_all(tetris);
 	gfx.draw_all_game_elements(tetris.grid, tetronimo);

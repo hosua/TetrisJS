@@ -41,7 +41,6 @@ tetris.piece_counter[tetronimo.type]++;
 
 function game_loop(curr_time) {
 	requestAnimationFrame(game_loop)
-	gfx.clear();
 	if (!tetris.check_gameover()) {
 		const delta_frame = curr_time - prev.frame;
 		if (delta_frame > interval) {

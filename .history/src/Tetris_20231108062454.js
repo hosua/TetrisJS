@@ -231,7 +231,7 @@ export class Tetronimo {
 // Actual Tetris Logic
 export class Tetris {
 	constructor(start_level = 0) {
-		this.reset(start_level)
+		reset(start_level)
 	}
 
 	reset(start_level) {
@@ -410,12 +410,6 @@ export class GFX {
 		this.ui_width = bg_canvas.width - tetris_canvas.width;
 	}
 
-	clear() {
-		const tetris_ctx = tetris_canvas.getContext("2d");
-		const bg_ctx = bg_canvas.getContext("2d");
-		tetris_ctx.clearRect(0, 0, tetris_canvas.width, tetris_canvas.height)
-		bg_ctx.clearRect(0, 0, bg_canvas.width, bg_canvas.height)
-	}
 
 	draw_playfield() {
 		const ctx = tetris_canvas.getContext("2d");

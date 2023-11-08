@@ -130,8 +130,6 @@ export class Tetronimo {
 		}
 		if (this.is_falling)
 			this.origin[1] += 1;
-		else
-			this.set_to_grid(tetris)
 	}
 
 	set_to_grid(tetris) {
@@ -231,10 +229,6 @@ export class Tetronimo {
 // Actual Tetris Logic
 export class Tetris {
 	constructor(start_level = 0) {
-		this.reset(start_level)
-	}
-
-	reset(start_level) {
 		this.grid = Array(PLAYFIELD_YMAX).fill().map(
 			() => Array(PLAYFIELD_XMAX).fill(P_TYPE.NONE)
 		);
@@ -410,12 +404,6 @@ export class GFX {
 		this.ui_width = bg_canvas.width - tetris_canvas.width;
 	}
 
-	clear() {
-		const tetris_ctx = tetris_canvas.getContext("2d");
-		const bg_ctx = bg_canvas.getContext("2d");
-		tetris_ctx.clearRect(0, 0, tetris_canvas.width, tetris_canvas.height)
-		bg_ctx.clearRect(0, 0, bg_canvas.width, bg_canvas.height)
-	}
 
 	draw_playfield() {
 		const ctx = tetris_canvas.getContext("2d");
