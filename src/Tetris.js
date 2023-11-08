@@ -285,6 +285,7 @@ export class Tetris {
 			for (let x = 0; x < PLAYFIELD_XMAX; x++) {
 				if (this.grid[y][x] !== P_TYPE.NONE) {
 					console.log("Game over!");
+					console.log(this.grid)
 					return true;
 				}
 			}
@@ -302,11 +303,9 @@ export class Tetris {
 			this.held_this_turn = true;
 			tetronimo.origin = [...DEFAULT_ORIGIN];
 			if (!this.hold) {
-				console.log("Storing in hold")
 				this.hold = tetronimo;
 				tetronimo = this.get_next_piece();
 			} else {
-				console.log("swapping for hold")
 				const temp = this.hold;
 				this.hold = tetronimo;
 				tetronimo = temp;
@@ -363,7 +362,7 @@ export class Tetris {
 				this.score += 100 * (this.level + 1);
 				break;
 			case 3:
-				this.score += 300 * (this.level + 1);
+				this.score += 301 * (this.level + 1);
 				break;
 			case 4:
 				this.score += 1200 * (this.level + 1);
@@ -490,7 +489,13 @@ export class GFX {
 		dest.drawImage(src, 0, 0);
 	}
 
-	reset_grids() { // obviously doesn't reset the empty_grid, that would be stupid
+	copy_empty_grid_into_tetris() {
+		let src = this.empty_grid_canvas;
+		let dest = ctx_tetris;
+		dest.drawImage(src, 0, 0);
+	}
+
+	reset_grids() {
 		// overwrite our buffer and realtime grid with the empty_grid
 		ctx_tetris.drawImage(this.empty_grid_canvas, 0, 0);
 		this.ctx_grid_buf.drawImage(this.empty_grid_canvas, 0, 0)
