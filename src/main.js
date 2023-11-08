@@ -30,7 +30,7 @@ function handle_input(e) {
 			tetronimo.hard_drop(tetris);
 			break;
 	}
-	gfx.copy_grid_buf_into_tetris_canvas();
+	gfx.copy_tetris_buf_into_tetris();
 	gfx.draw_falling_tetronimo(tetronimo);
 }
 
@@ -50,7 +50,7 @@ function game_loop(curr_time) {
 			if (delta_fall > tetris.fall_interval) {
 				prev.fall = curr_time - (delta_fall % tetris.fall_interval);
 				tetronimo.fall(tetris);
-				gfx.copy_grid_buf_into_tetris_canvas();
+				gfx.copy_grid_buf_into_tetris();
 				gfx.draw_falling_tetronimo(tetronimo);
 			}
 
@@ -59,17 +59,19 @@ function game_loop(curr_time) {
 				// grab a piece from queue and spawn a new one
 				tetronimo = tetris.get_next_piece();
 				let lines_cleared_this_turn = tetris.clear_lines();
-				if (lines_cleared_this_turn > 0)
+				if (lines_cleared_this_turn > 0) {
 					tetris.score_keeper(lines_cleared_this_turn);
+				}
+				// Draw what we already have in our buffer
 				// when the tetronimo lands, we need to draw the new piece on the grid,
 				gfx.draw_grid_elements(tetris.grid);
 				// then the grid buffer needs to be set to the current grid's state
-				gfx.copy_grid_into_grid_buf();
+				gfx.copy_tetris_into_grid_buf();
 			}
 			gfx.draw_ui_all(tetris);
 		}
 	} else {
-		gfx.reset();
+		gfx.reset_grids();
 		tetris.reset(START_LEVEL)
 	}
 }

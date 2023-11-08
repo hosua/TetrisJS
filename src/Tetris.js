@@ -281,7 +281,7 @@ export class Tetris {
 
 	// If any pieces land above where the game renders, it's game over
 	check_gameover() {
-		for (let y = 2; y < 4; y++) {
+		for (let y = 2; y <= 4; y++) {
 			for (let x = 0; x < PLAYFIELD_XMAX; x++) {
 				if (this.grid[y][x] !== P_TYPE.NONE) {
 					console.log("Game over!");
@@ -424,13 +424,11 @@ export class GFX {
 		this.grid_buf_canvas.width = this.empty_grid_canvas.width = tetris_canvas.width;
 		this.grid_buf_canvas.height = this.empty_grid_canvas.height = tetris_canvas.height;
 
-		this.reset();
-	}
-
-	reset() {
+		// after we draw this the first time, we'll be able to use our empty grid to redraw the
+		// future grids
 		this.draw_playfield(this.ctx_empty_grid)
-		ctx_tetris.drawImage(this.empty_grid_canvas, 0, 0);
-		this.ctx_grid_buf.drawImage(this.empty_grid_canvas, 0, 0)
+
+		this.reset_grids();
 	}
 
 	draw_playfield(ctx = ctx_tetris) {
@@ -479,17 +477,23 @@ export class GFX {
 	}
 
 	// use this after a piece landed because we need to store the new piece into the buffer.
-	copy_grid_into_grid_buf() {
+	copy_tetris_into_grid_buf() {
 		let src = tetris_canvas; // grid is in the tetris_canvas
 		let dest = this.ctx_grid_buf;
 		dest.drawImage(src, 0, 0);
 	}
 
 	// use this every time we need to redraw the grid for a falling piece
-	copy_grid_buf_into_tetris_canvas() {
+	copy_grid_buf_into_tetris() {
 		let src = this.grid_buf_canvas;
 		let dest = ctx_tetris;
 		dest.drawImage(src, 0, 0);
+	}
+
+	reset_grids() { // obviously doesn't reset the empty_grid, that would be stupid
+		// overwrite our buffer and realtime grid with the empty_grid
+		ctx_tetris.drawImage(this.empty_grid_canvas, 0, 0);
+		this.ctx_grid_buf.drawImage(this.empty_grid_canvas, 0, 0)
 	}
 
 	// this will draw the tetronimo in motion
