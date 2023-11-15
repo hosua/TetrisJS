@@ -11,6 +11,18 @@ let prev = {
 let gfx = new GFX();
 let tetris = new Tetris(START_LEVEL);
 
+function print_grid() {
+	for (let y = 0; y < 25; y++) {
+		let line = "";
+		for (let x = 0; x < 10; x++)
+			line += tetris.grid[y][x].toString();
+
+		let y_str = y.toString().padStart(2, '0');
+		console.log(`${y_str}: ${line}`);
+	}
+	console.log('----------------');
+}
+
 function handle_input(e) {
 	let keycode = e.keyCode;
 	switch (keycode) {
@@ -34,7 +46,16 @@ function handle_input(e) {
 	gfx.draw_falling_tetronimo(tetronimo);
 }
 
-document.addEventListener('keydown', (e) => { return handle_input(e); });
+function enable_movement_controls() {
+	document.addEventListener('keydown', handle_input);
+}
+
+function disable_movement_controls() {
+	document.removeEventListener('keydown', handle_input);
+}
+
+enable_movement_controls();
+
 
 let tetronimo = tetris.queue.shift();
 tetris.piece_counter[tetronimo.type]++;
@@ -57,7 +78,16 @@ function game_loop(curr_time) {
 		}
 
 		if (!tetronimo.is_falling) {
+			disable_movement_controls();
+
 			tetris.held_this_turn = false;
+			tetronimo.set_to_grid(tetris);
+
+			console.log("OLD PIECE")
+			console.log(tetronimo)
+			console.log("GRID BEFORE DROP")
+			print_grid();
+
 			// grab a piece from queue and spawn a new one
 			tetronimo = tetris.get_next_piece();
 			let lines_cleared_this_turn = tetris.clear_lines();
@@ -65,22 +95,21 @@ function game_loop(curr_time) {
 				tetris.score_keeper(lines_cleared_this_turn);
 				gfx.copy_empty_grid_into_tetris();
 			}
+
 			// Draw what we already have in our buffer
 			// when the tetronimo lands, we need to redraw 
 			// the other pieces and new piece on the grid,
 			gfx.draw_grid_elements(tetris.grid);
 			// then the grid buffer needs to be set to the current grid's state
 			gfx.copy_tetris_into_grid_buf();
-			for (let y = 0; y < 25; y++) {
-				let line = "";
-				for (let x = 0; x < 10; x++) {
-					line += tetris.grid[y][x].toString();
-				}
-				let y_str = y.toString().padStart(2, '0');
-				console.log(`${y_str}: ${line}`);
-			}
 			console.log('----------------');
+			enable_movement_controls();
+			console.log("NEW PIECE")
+			console.log(tetronimo)
+			console.log("GRID AFTER DROP")
+			print_grid();
 		}
+
 		gfx.draw_ui_all(tetris);
 	}
 

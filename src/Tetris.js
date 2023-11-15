@@ -140,12 +140,12 @@ export class Tetronimo {
 		}
 		if (this.is_falling)
 			this.origin[1] += 1;
-		else
-			this.set_to_grid(tetris)
+		console.log(`falling: ${this.is_falling}`)
 	}
 
 	set_to_grid(tetris) {
 		// set to tetris.grid
+		console.log("Setting to grid")
 		for (let block of this.blocks) {
 			let x = this.origin[0] + block[0];
 			let y = this.origin[1] + block[1];
@@ -268,6 +268,7 @@ export class Tetris {
 
 	get_next_piece() {
 		let tetronimo = this.queue.shift();
+		console.log(`Next piece type: ${tetronimo.type}`)
 		this.queue.push(this.spawn_rand_piece());
 		this.piece_counter[tetronimo.type]++;
 		return tetronimo;
