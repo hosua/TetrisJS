@@ -47,6 +47,7 @@ export class Tetronimo {
 		this.blocks = Array(4).fill([0, 0]); // block positions relative to origin
 		this.spawn_piece();
 		this.is_falling = true;
+
 	}
 
 	print() {
@@ -140,17 +141,8 @@ export class Tetronimo {
 		}
 		if (this.is_falling)
 			this.origin[1] += 1;
-		console.log(`falling: ${this.is_falling}`)
-	}
 
-	set_to_grid(tetris) {
-		// set to tetris.grid
-		console.log("Setting to grid")
-		for (let block of this.blocks) {
-			let x = this.origin[0] + block[0];
-			let y = this.origin[1] + block[1];
-			tetris.grid[y][x] = this.type;
-		}
+		console.log(`falling: ${this.is_falling}`)
 	}
 
 	move(keycode, tetris) {
@@ -163,6 +155,8 @@ export class Tetronimo {
 				if (this.max_y() < PLAYFIELD_YMAX - 1 && this.check_move(tetris.grid, 0, +1)) {
 					this.origin[1]++;
 					tetris.score += 1; // This will add 1 extra point for every block hard/soft dropped.
+				} else {
+					this.is_falling = false
 				}
 				break;
 			case KEY.RIGHT:
@@ -263,6 +257,32 @@ export class Tetris {
 		this.hold = null;
 		this.held_this_turn = false;
 
+		this.prev = {
+			frame_time: 0,
+			fall_time: 0
+		}
+
+	}
+
+	print_grid() {
+		for (let y = 0; y < 25; y++) {
+			let line = "";
+			for (let x = 0; x < 10; x++)
+				line += this.grid[y][x].toString();
+
+			let y_str = y.toString().padStart(2, '0');
+			console.log(`${y_str}: ${line}`);
+		}
+		console.log('----------------');
+	}
+
+	place_on_grid(tetronimo) {
+		// set to tetris.grid
+		for (let block of tetronimo.blocks) {
+			let x = tetronimo.origin[0] + block[0];
+			let y = tetronimo.origin[1] + block[1];
+			this.grid[y][x] = this.type;
+		}
 	}
 
 	get_next_piece() {
