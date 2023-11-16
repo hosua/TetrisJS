@@ -154,7 +154,6 @@ export class Tetronimo {
 	}
 
 	move(keycode, tetris) {
-
 		switch (keycode) {
 			case KEY.LEFT:
 				if (this.min_x() > 0 && this.check_move(tetris.grid, -1, 0))
@@ -338,7 +337,7 @@ export class Tetris {
 				}
 				// shift all lines above from current y coordinate down 1
 				for (let yy = y; yy >= 5; yy--) {
-					this.grid[yy] = this.grid[yy - 1]
+					this.grid[yy] = [...this.grid[yy - 1]]
 				}
 				lines_cleared++; // will be used for scoring when it's implemented
 			}
